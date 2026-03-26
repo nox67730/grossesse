@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Grossesse">
+  <meta name="description" content="Suivez l'évolution de votre bébé semaine après semaine">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>Simulateur de grossesse</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #1D9E75;
+      --green-light: rgba(29,158,117,0.1);
+      --bg: #f5f3ee;
+      --card: #ffffff;
+      --text: #1a1a18;
+      --muted: #5f5e5a;
+      --hint: #888780;
+      --border: rgba(0,0,0,0.11);
+      --input-border: rgba(0,0,0,0.2);
+      --metric-bg: #f0ede8;
+      --slider-track: #e0ddd8;
+    }
+
+    html { height: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      padding: env(safe-area-inset-top, 0) 0 calc(env(safe-area-inset-bottom, 0) + 80px);
+    }
+
+    /* Header */
+    .app-header {
+      background: var(--green);
+      color: #fff;
+      padding: 16px 20px 20px;
+      padding-top: calc(env(safe-area-inset-top, 0) + 16px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .app-header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    .app-header p  { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+
+    /* Content */
+    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* Inputs */
+    label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 5px; }
+    input[type="date"] {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--input-border); border-radius: 10px;
+      background: var(--bg); color: var(--text);
+      font-size: 15px; font-family: inherit; outline: none;
+    }
+    input[type="date"]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(29,158,117,0.15); }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 5px; border-radius: 3px;
+      background: var(--slider-track); outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--green); border: 3px solid #fff;
+      box-shadow: 0 0 0 1px var(--green), 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--green); border: 3px solid #fff; cursor: pointer;
+    }
+
+    .date-grid { display: flex; gap: 12px; }
+    .date-grid > div { flex: 1; }
+
+    .error-msg { font-size: 13px; color: #D85A30; margin-top: 8px; display: none; }
+
+    /* Install banner */
+    .install-banner {
+      background: #fff8e7;
+      border: 1px solid #FAC775;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .install-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .install-banner p { font-size: 13px; color: #633806; flex: 1; line-height: 1.4; }
+    .install-btn {
+      background: var(--green); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Baby card */
+    .baby-card { text-align: center; padding: 20px 16px; }
+    .badge-pill { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.2px; }
+    #baby-svg { display: block; margin: 0 auto; }
+    .stage-label { font-size: 16px; font-weight: 600; color: var(--text); margin-top: 10px; }
+    .fruit-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* Metrics */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .metric { background: var(--metric-bg); border-radius: 12px; padding: 14px 12px; text-align: center; }
+    .metric-label { font-size: 11px; color: var(--hint); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .metric-value { font-size: 22px; font-weight: 700; color: var(--text); margin: 0; }
+    .metric-sub   { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+
+    /* Progress */
+    .trimester-bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+    .progress-track { background: var(--slider-track); border-radius: 4px; height: 9px; overflow: hidden; margin: 8px 0 5px; }
+    .progress-fill  { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.5s ease; }
+
+    /* Chart */
+    .chart-wrap { position: relative; width: 100%; height: 240px; }
+    .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; margin-bottom: 10px; }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .ldot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+    .oms-note {
+      font-size: 11px; color: var(--muted); background: var(--bg);
+      border-radius: 8px; padding: 8px 10px; margin-top: 10px;
+      border-left: 3px solid var(--green); line-height: 1.5;
+    }
+
+    .slider-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+    .slider-label { font-size: 12px; color: var(--muted); white-space: nowrap; margin: 0; }
+    .slider-week  { font-size: 14px; font-weight: 700; color: var(--text); min-width: 50px; text-align: right; }
+    .slider-info  { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px; }
+
+    /* Description */
+    .desc-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .desc-text  { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* Empty */
+    #empty-msg {
+      text-align: center; padding: 3rem 1.5rem; color: var(--muted); font-size: 14px;
+      background: var(--card); border-radius: 16px; border: 0.5px solid var(--border);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    footer { text-align: center; font-size: 11px; color: var(--hint); padding: 16px 16px 8px; }
+
+    @media (min-width: 480px) {
+      .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>Simulateur de grossesse</h1>
+  <p>Évolution de votre bébé semaine après semaine</p>
+</div>
+
+<div class="content">
+
+  <div class="install-banner" id="install-banner">
+    <div class="icon">📲</div>
+    <p>Installez l'app sur votre téléphone pour y accéder hors ligne</p>
+    <button class="install-btn" id="install-btn">Installer</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dates</div>
+    <div class="date-grid">
+      <div>
+        <label>Date de conception</label>
+        <input type="date" id="g-conc">
+      </div>
+      <div>
+        <label>Date du jour</label>
+        <input type="date" id="g-today">
+      </div>
+    </div>
+    <div class="error-msg" id="g-error">La date du jour doit être après la conception.</div>
+  </div>
+
+  <div id="main-content" style="display:none;">
+
+    <div class="card baby-card">
+      <div id="g-badge"></div>
+      <svg id="baby-svg" width="160" height="190" viewBox="0 0 200 220"></svg>
+      <div class="stage-label" id="g-stage-label"></div>
+      <div class="fruit-label" id="g-fruit-label"></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric"><p class="metric-label">Semaine</p><p class="metric-value" id="g-week">—</p><p class="metric-sub">SA</p></div>
+      <div class="metric"><p class="metric-label">Poids</p><p class="metric-value" id="g-weight">—</p><p class="metric-sub">&nbsp;</p></div>
+      <div class="metric"><p class="metric-label">Taille</p><p class="metric-value" id="g-size">—</p><p class="metric-sub">&nbsp;</p></div>
+      <div class="metric"><p class="metric-label">Naissance prévue</p><p class="metric-value" id="g-due" style="font-size:14px; font-weight:700;">—</p><p class="metric-sub">&nbsp;</p></div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:500;">Progression</div>
+      <div class="trimester-bar">
+        <div style="background:#9FE1CB; flex:13;"></div>
+        <div style="background:#FAC775; flex:14;"></div>
+        <div style="background:#F0997B; flex:13;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--hint); margin-bottom:8px;">
+        <span>SA 1</span><span>T1</span><span>T2</span><span>T3</span><span>SA 40</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="g-progress" style="width:0%;"></div>
+      </div>
+      <div style="font-size:12px; color:var(--muted); margin-top:5px;" id="g-progress-label"></div>
+    </div>
+
+    <div class="card">
+      <div style="margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:6px;">Courbe de poids</div>
+        <div class="legend">
+          <span><span class="ldot" style="background:#9FE1CB;"></span>T1</span>
+          <span><span class="ldot" style="background:#FAC775;"></span>T2</span>
+          <span><span class="ldot" style="background:#F0997B;"></span>T3</span>
+          <span><span class="ldot" style="background:#D85A30; border-radius:50%;"></span>Vous êtes ici</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="wChart"></canvas>
+      </div>
+      <div class="oms-note">Médiane Intergrowth-21 (OMS) — terme : <strong>3,3 kg</strong> en moyenne (normale : 2,5–4,5 kg)</div>
+      <div class="slider-row">
+        <label class="slider-label">Explorer</label>
+        <input type="range" min="4" max="40" value="20" step="1" id="g-slider">
+        <span class="slider-week" id="g-slider-lbl">SA 20</span>
+      </div>
+      <div class="slider-info" id="g-slider-info"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+      <div class="desc-title" id="g-desc-title">Développement</div>
+      <div class="desc-text" id="g-desc-text"></div>
+    </div>
+
+  </div>
+
+  <div id="empty-msg">
+    <div class="empty-icon">🌱</div>
+    <div>Entrez la date de conception pour démarrer le simulateur</div>
+  </div>
+
+  <footer>Données Intergrowth-21 (OMS) &middot; À titre indicatif uniquement</footer>
+
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+
+document.getElementById('install-btn').addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('install-banner').style.display = 'none';
+    });
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+
+const WD = [
+  {w:4,  g:0.0005, cm:0.10, fruit:"un grain de pavot",     color:"#F4C0D1", desc:"L'œuf fécondé s'implante dans l'utérus. Le tube neural commence à se former."},
+  {w:5,  g:0.001,  cm:0.13, fruit:"une graine de sésame",  color:"#F4C0D1", desc:"Le cœur commence à battre ! Les bourgeons des bras et jambes apparaissent."},
+  {w:6,  g:0.002,  cm:0.30, fruit:"une lentille",           color:"#F4C0D1", desc:"Les traits du visage se dessinent. Le cerveau se développe rapidement."},
+  {w:7,  g:0.003,  cm:0.80, fruit:"un myrtille",            color:"#ED93B1", desc:"Bras et jambes s'allongent. Le foie commence à produire des cellules sanguines."},
+  {w:8,  g:0.004,  cm:1.60, fruit:"une framboise",          color:"#ED93B1", desc:"Tous les organes essentiels sont formés. Les doigts commencent à se séparer."},
+  {w:9,  g:0.007,  cm:2.30, fruit:"une cerise",             color:"#ED93B1", desc:"Le bébé bouge déjà, même si vous ne le sentez pas encore."},
+  {w:10, g:0.014,  cm:3.10, fruit:"une fraise",             color:"#FAC775", desc:"Les organes génitaux se forment. Les ongles poussent."},
+  {w:11, g:0.025,  cm:4.10, fruit:"une figue",              color:"#FAC775", desc:"Il peut ouvrir et fermer les poings. Les os se durcissent."},
+  {w:12, g:0.058,  cm:5.40, fruit:"un citron vert",         color:"#FAC775", desc:"Fin du 1er trimestre ! Le risque de fausse couche diminue fortement."},
+  {w:13, g:0.081,  cm:7.40, fruit:"une pêche",              color:"#97C459", desc:"Les empreintes digitales se forment. Il suce son pouce."},
+  {w:14, g:0.110,  cm:8.70, fruit:"un citron",              color:"#97C459", desc:"Le sexe peut être visible à l'écho. Le lanugo recouvre le corps."},
+  {w:16, g:0.200,  cm:11.6, fruit:"un avocat",              color:"#5DCAA5", desc:"Les yeux peuvent bouger. Il entend vos voix pour la première fois."},
+  {w:18, g:0.310,  cm:14.2, fruit:"une patate douce",       color:"#5DCAA5", desc:"Les premiers petits coups de pied peuvent être ressentis !"},
+  {w:20, g:0.460,  cm:25.0, fruit:"une banane",             color:"#1D9E75", desc:"Mi-grossesse ! Échographie morphologique. Il avale du liquide amniotique."},
+  {w:22, g:0.630,  cm:27.8, fruit:"un épi de maïs",        color:"#1D9E75", desc:"Sourcils et cils apparaissent. Le sens du toucher est développé."},
+  {w:24, g:0.820,  cm:30.0, fruit:"un épi de maïs",        color:"#1D9E75", desc:"Les poumons se développent. Il réagit aux sons extérieurs."},
+  {w:26, g:1.020,  cm:33.0, fruit:"une laitue romaine",     color:"#F0997B", desc:"Les yeux s'ouvrent ! Le cerveau est très actif."},
+  {w:28, g:1.230,  cm:35.0, fruit:"une aubergine",          color:"#F0997B", desc:"Début du 3e trimestre. Il prend de la graisse sous-cutanée."},
+  {w:30, g:1.460,  cm:37.5, fruit:"un chou frisé",          color:"#D85A30", desc:"Le cerveau se plisse. Le bébé fait des rêves (sommeil REM)."},
+  {w:32, g:1.700,  cm:39.5, fruit:"un ananas",              color:"#D85A30", desc:"Les ongles atteignent le bout des doigts. Il se retourne tête en bas."},
+  {w:34, g:2.000,  cm:42.0, fruit:"un cantaloup",           color:"#993C1D", desc:"Les poumons arrivent à maturité. Il prend ~200 g par semaine."},
+  {w:36, g:2.400,  cm:45.0, fruit:"une papaye",             color:"#993C1D", desc:"Considéré 'à terme précoce'. Il gagne du poids chaque jour."},
+  {w:38, g:2.900,  cm:48.0, fruit:"une citrouille",         color:"#993C1D", desc:"Il est prêt à naître et prend position dans le bassin."},
+  {w:39, g:3.100,  cm:49.5, fruit:"une petite pastèque",    color:"#712B13", desc:"Quasi à terme. Tous les organes sont matures."},
+  {w:40, g:3.300,  cm:50.5, fruit:"une pastèque",           color:"#712B13", desc:"Terme ! Poids médian 3 300 g, taille ~50 cm. Bébé prêt pour le monde."},
+];
+
+function interp(w, arr, key) {
+  if (w <= arr[0].w) return arr[0][key];
+  if (w >= arr[arr.length-1].w) return arr[arr.length-1][key];
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (w >= arr[i].w && w < arr[i+1].w) {
+      const t = (w - arr[i].w) / (arr[i+1].w - arr[i].w);
+      return arr[i][key] + t * (arr[i+1][key] - arr[i][key]);
+    }
+  }
+  return arr[arr.length-1][key];
+}
+
+function getStage(w) {
+  let s = WD[0];
+  for (let d of WD) { if (w >= d.w) s = d; else break; }
+  return s;
+}
+
+function trimBg(w)  { return w<=13?'#E1F5EE':w<=27?'#FAEEDA':'#FAECE7'; }
+function trimTxt(w) { return w<=13?'#085041':w<=27?'#633806':'#712B13'; }
+function trimName(w){ return w<=13?'1er trimestre':w<=27?'2e trimestre':'3e trimestre'; }
+
+function fmtW(g) {
+  if (g < 0.001) return '< 1g';
+  if (g < 1) return Math.round(g*1000)+'g';
+  return g >= 1 ? g.toFixed(2)+'kg' : Math.round(g*1000)+'g';
+}
+function fmtS(cm) {
+  if (cm < 1) return (cm*10).toFixed(1)+'mm';
+  return cm.toFixed(1)+'cm';
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+}
+
+const allWeeks   = Array.from({length:37},(_,i)=>i+4);
+const allWeights = allWeeks.map(w=>parseFloat(interp(w,WD,'g').toFixed(4)));
+
+Chart.register({
+  id:'trimBands',
+  beforeDraw(chart){
+    const {ctx:c,chartArea:{top,bottom},scales:{x}}=chart;
+    if(!x)return;
+    [{from:4,to:13,color:'rgba(159,225,203,0.2)'},{from:14,to:27,color:'rgba(250,199,117,0.2)'},{from:28,to:40,color:'rgba(240,153,123,0.2)'}].forEach(b=>{
+      const x1=x.getPixelForValue(b.from),x2=x.getPixelForValue(b.to);
+      c.fillStyle=b.color; c.fillRect(x1,top,x2-x1,bottom-top);
+    });
+  }
+});
+
+const myChart = new Chart(document.getElementById('wChart').getContext('2d'),{
+  type:'line',
+  data:{
+    labels:allWeeks,
+    datasets:[
+      {label:'OMS',data:allWeights,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2.5,pointRadius:0,fill:true,tension:0.45},
+      {label:'Vous',data:[],borderColor:'#D85A30',backgroundColor:'#D85A30',pointRadius:10,pointHoverRadius:12,pointStyle:'circle',showLine:false},
+      {label:'Explorer',data:[],borderColor:'#378ADD',backgroundColor:'#378ADD',pointRadius:6,pointHoverRadius:8,pointStyle:'rectRot',showLine:false}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',
+        borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:10,
+        callbacks:{title:c=>'Semaine '+c[0].label+' SA',label:c=>'Poids : '+fmtW(c.parsed.y)}
+      }
+    },
+    scales:{
+      x:{title:{display:true,text:"SA",font:{size:11},color:'#888780'},
+         ticks:{autoSkip:false,maxRotation:0,callback:(v,i)=>allWeeks[i]%4===0?allWeeks[i]:'',color:'#888780',font:{size:11}},
+         grid:{color:'rgba(0,0,0,0.05)'}},
+      y:{title:{display:true,text:'Poids',font:{size:11},color:'#888780'},
+         min:0,max:3.8,
+         ticks:{color:'#888780',font:{size:11},callback:v=>v<1?Math.round(v*1000)+'g':v.toFixed(1)+'kg'},
+         grid:{color:'rgba(0,0,0,0.05)'}}
+    }
+  }
+});
+
+let realWeek = null;
+
+function drawBaby(week, color) {
+  const svg = document.getElementById('baby-svg');
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const scale = Math.max(0.08, Math.min(1.0,(week-3)/37));
+  const cx=100, headR=Math.round(18+scale*32), bodyW=Math.round(14+scale*26), bodyH=Math.round(20+scale*40);
+  const headY=Math.round(30+(1-scale)*60), bodyY=headY+headR-2;
+  const fc=color||'#9FE1CB', sc='#888780';
+  function el(tag,attrs){const e=document.createElementNS(ns,tag);for(let[k,v]of Object.entries(attrs))e.setAttribute(k,v);svg.appendChild(e);}
+  if(week<8){
+    el('ellipse',{cx,cy:110,rx:Math.round(8+scale*20),ry:Math.round(12+scale*28),fill:fc,stroke:sc,'stroke-width':1});
+  } else {
+    el('ellipse',{cx,cy:headY,rx:headR,ry:headR,fill:fc,stroke:sc,'stroke-width':1});
+    el('ellipse',{cx,cy:bodyY+bodyH/2,rx:bodyW,ry:bodyH/2,fill:fc,stroke:sc,'stroke-width':1});
+    if(week>=10){
+      const aL=Math.round(bodyW*0.8+scale*10);
+      el('line',{x1:cx-bodyW,y1:bodyY+8,x2:cx-bodyW-aL,y2:bodyY+16+scale*10,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});
+      el('line',{x1:cx+bodyW,y1:bodyY+8,x2:cx+bodyW+aL,y2:bodyY+16+scale*10,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});
+    }
+    if(week>=12){
+      const lL=Math.round(16+scale*28);
+      el('line',{x1:cx-bodyW*0.5,y1:bodyY+bodyH-4,x2:cx-bodyW*0.5-8,y2:bodyY+bodyH+lL,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});
+      el('line',{x1:cx+bodyW*0.5,y1:bodyY+bodyH-4,x2:cx+bodyW*0.5+8,y2:bodyY+bodyH+lL,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});
+    }
+    if(week>=14){
+      el('circle',{cx:cx-Math.round(headR*0.35),cy:headY-Math.round(headR*0.1),r:Math.round(headR*0.12),fill:sc});
+      el('circle',{cx:cx+Math.round(headR*0.35),cy:headY-Math.round(headR*0.1),r:Math.round(headR*0.12),fill:sc});
+      const sx=Math.round(headR*0.25);
+      el('path',{d:`M ${cx-sx} ${headY+Math.round(headR*0.3)} Q ${cx} ${headY+Math.round(headR*0.45)} ${cx+sx} ${headY+Math.round(headR*0.3)}`,fill:'none',stroke:sc,'stroke-width':1.5,'stroke-linecap':'round'});
+    }
+  }
+}
+
+function updateDisplay(w){
+  const kg=interp(w,WD,'g'), cm=interp(w,WD,'cm'), stage=getStage(w);
+  const pct=Math.min(100,Math.round((w/40)*100));
+  document.getElementById('g-week').textContent=w;
+  document.getElementById('g-weight').textContent=fmtW(kg);
+  document.getElementById('g-size').textContent=fmtS(cm);
+  document.getElementById('g-badge').innerHTML=`<span class="badge-pill" style="background:${trimBg(w)};color:${trimTxt(w)};">${trimName(w)}</span>`;
+  document.getElementById('g-stage-label').textContent=(w<10?'Embryon':'Fœtus')+' · Semaine '+w+' SA';
+  document.getElementById('g-fruit-label').textContent='Taille approximative : '+stage.fruit;
+  document.getElementById('g-desc-title').textContent='Semaine '+w+' — développement';
+  document.getElementById('g-desc-text').textContent=stage.desc;
+  document.getElementById('g-progress').style.width=pct+'%';
+  document.getElementById('g-progress-label').textContent=pct+'% · '+Math.max(0,40-w)+' semaines restantes';
+  drawBaby(w,stage.color);
+}
+
+function updateChart(sliderWeek){
+  myChart.data.datasets[1].data=realWeek!==null?[{x:realWeek,y:interp(realWeek,WD,'g')}]:[];
+  myChart.data.datasets[2].data=(sliderWeek!==null&&sliderWeek!==realWeek)?[{x:sliderWeek,y:interp(sliderWeek,WD,'g')}]:[];
+  myChart.update('none');
+}
+
+function onDates(){
+  const c=document.getElementById('g-conc').value;
+  const t=document.getElementById('g-today').value;
+  const err=document.getElementById('g-error');
+  if(!c||!t)return;
+  const diff=Math.round((new Date(t)-new Date(c))/86400000);
+  if(diff<0){err.style.display='block';return;}
+  err.style.display='none';
+  realWeek=Math.max(4,Math.min(40,Math.round((diff+14)/7)));
+  const due=new Date(c); due.setDate(due.getDate()+40*7-14);
+  document.getElementById('g-due').textContent=fmtDate(due);
+  document.getElementById('g-slider').value=realWeek;
+  document.getElementById('g-slider-lbl').textContent='SA '+realWeek;
+  document.getElementById('g-slider-info').textContent='Votre position : semaine '+realWeek+' SA';
+  document.getElementById('main-content').style.display='block';
+  document.getElementById('empty-msg').style.display='none';
+  updateDisplay(realWeek);
+  updateChart(realWeek);
+
+  // Sauvegarde locale
+  localStorage.setItem('g-conc', c);
+}
+
+document.getElementById('g-slider').addEventListener('input',function(){
+  const w=parseInt(this.value);
+  document.getElementById('g-slider-lbl').textContent='SA '+w;
+  if(realWeek!==null){
+    document.getElementById('g-slider-info').textContent=w===realWeek
+      ?'Votre position : semaine '+realWeek+' SA'
+      :'Exploration SA '+w+' · Votre stade : SA '+realWeek;
+  }
+  updateDisplay(w);
+  updateChart(w===realWeek?null:w);
+});
+
+document.getElementById('g-conc').addEventListener('change',onDates);
+document.getElementById('g-today').addEventListener('change',onDates);
+
+// Restaurer date sauvegardée
+const saved=localStorage.getItem('g-conc');
+if(saved)document.getElementById('g-conc').value=saved;
+document.getElementById('g-today').value=new Date().toISOString().split('T')[0];
+if(saved)onDates();
+</script>
+</body>
+</html>
