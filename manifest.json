@@ -1,25 +1,17 @@
 {
-  "name": "Simulateur de grossesse",
+  "name": "Suivi de grossesse",
   "short_name": "Grossesse",
-  "description": "Suivez l'évolution de votre bébé semaine après semaine",
+  "description": "Suivi bébé, nutrition et poids pendant la grossesse",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f3ee",
   "theme_color": "#1D9E75",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "lang": "fr",
+  "categories": ["health", "lifestyle"],
   "icons": [
-    {
-      "src": "./icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

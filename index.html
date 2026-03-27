@@ -5,123 +5,162 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#1D9E75">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Grossesse">
+  <meta name="description" content="Suivi grossesse : bébé, nutrition et poids maman">
   <link rel="manifest" href="./manifest.json">
-  <title>Simulateur de grossesse</title>
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>Suivi de grossesse</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    :root{--green:#1D9E75;--amber:#BA7517;--amber-bg:#FAEEDA;--blue:#185FA5;--blue-bg:#E6F1FB;--bg:#f5f3ee;--card:#ffffff;--text:#1a1a18;--muted:#5f5e5a;--hint:#888780;--border:rgba(0,0,0,0.11);--metric-bg:#f0ede8;--track:#e0ddd8;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100%;padding-bottom:32px;}
-    .app-header{background:var(--green);color:#fff;padding:16px 20px 18px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);}
-    .app-header h1{font-size:20px;font-weight:700;}
-    .app-header p{font-size:13px;opacity:0.85;margin-top:2px;}
-    .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
-    .tab{flex:1;padding:12px 4px;font-size:13px;font-weight:600;color:var(--hint);text-align:center;cursor:pointer;border-bottom:2px solid transparent;}
-    .tab.active{color:var(--green);border-bottom-color:var(--green);}
-    .page{display:none;padding:14px;max-width:600px;margin:0 auto;}
-    .page.active{display:block;}
-    .card{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
-    .card-title{font-size:12px;font-weight:700;color:var(--hint);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
-    input[type=date],input[type=number],select{width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,0.18);border-radius:10px;background:#fff;color:var(--text);font-size:15px;font-family:inherit;outline:none;}
-    input[type=date]:focus,input[type=number]:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.15);}
-    input[type=number]{-moz-appearance:textfield;}
-    input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .error-msg{font-size:12px;color:#D85A30;margin-top:6px;display:none;}
-    input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:var(--track);outline:none;cursor:pointer;}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 1px var(--green);cursor:pointer;}
-    input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--green);border:3px solid #fff;cursor:pointer;}
-    .baby-card{text-align:center;padding:18px 16px 12px;}
-    .badge-pill{display:inline-block;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
-    #baby-svg{display:block;margin:0 auto;}
-    .stage-label{font-size:15px;font-weight:700;color:var(--text);margin-top:8px;}
-    .fruit-card{display:flex;align-items:center;gap:16px;background:#fffdf8;border:1px solid rgba(0,0,0,0.08);border-radius:16px;padding:14px 16px;margin-bottom:12px;}
-    .fruit-svg-wrap{flex-shrink:0;width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
-    @keyframes bounce{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
-    @keyframes wiggle{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg) scale(1.05);}}
-    .fruit-svg-wrap svg{animation:bounce 2.8s ease-in-out infinite;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.13));}
-    .fruit-info{flex:1;}
-    .fruit-week-lbl{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
-    .fruit-name{font-size:18px;font-weight:800;color:var(--text);line-height:1.1;}
-    .fruit-msg{font-size:12px;color:var(--muted);margin-top:5px;font-style:italic;line-height:1.4;}
-    .size-badge{display:inline-block;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:7px;}
-    .metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;}
-    .metric{background:var(--metric-bg);border-radius:12px;padding:12px 10px;text-align:center;}
-    .metric-label{font-size:10px;color:var(--hint);margin:0 0 4px;text-transform:uppercase;letter-spacing:0.3px;}
-    .metric-value{font-size:20px;font-weight:700;color:var(--text);margin:0;line-height:1.1;}
-    .metric-sub{font-size:11px;color:var(--muted);margin:3px 0 0;}
-    .trimbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-bottom:5px;}
-    .prog-track{background:var(--track);border-radius:4px;height:9px;overflow:hidden;margin:6px 0 4px;}
-    .prog-fill{height:100%;border-radius:4px;background:var(--green);transition:width .5s ease;}
-    .chart-wrap{position:relative;width:100%;height:230px;}
-    .legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap;margin-bottom:10px;}
-    .legend span{display:flex;align-items:center;gap:5px;}
-    .ldot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;}
-    .oms-note{font-size:11px;color:var(--muted);background:var(--bg);border-radius:8px;padding:7px 10px;margin-top:10px;border-left:3px solid var(--green);line-height:1.5;}
-    .slider-row{display:flex;align-items:center;gap:12px;margin-top:14px;}
-    .slider-lbl{font-size:12px;color:var(--muted);white-space:nowrap;margin:0;}
-    .slider-val{font-size:14px;font-weight:700;color:var(--text);min-width:50px;text-align:right;}
-    .slider-info{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px;}
-    .desc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
-    .desc-text{font-size:14px;color:var(--muted);line-height:1.65;}
-    .kcal-hero{text-align:center;padding:20px 16px 16px;}
-    .kcal-total{font-size:52px;font-weight:800;color:var(--green);line-height:1;}
-    .kcal-unit{font-size:15px;color:var(--muted);margin-top:4px;}
-    .kcal-sub{font-size:13px;color:var(--muted);margin-top:6px;}
-    .kcal-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-    .kcal-box{border-radius:12px;padding:14px 12px;text-align:center;}
-    .kcal-box .val{font-size:26px;font-weight:800;line-height:1;}
-    .kcal-box .lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-top:4px;}
-    .kcal-box .desc{font-size:11px;margin-top:3px;opacity:0.8;}
-    .kcal-box.base{background:var(--blue-bg);color:var(--blue);}
-    .kcal-box.extra{background:var(--amber-bg);color:var(--amber);}
-    .imc-bar{height:10px;border-radius:5px;background:linear-gradient(to right,#85B7EB,#97C459,#FAC775,#F0997B,#E24B4A);position:relative;margin:8px 0 4px;}
-    .imc-cursor{position:absolute;top:-3px;width:4px;height:16px;background:var(--text);border-radius:2px;transform:translateX(-50%);transition:left .4s;}
-    .imc-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--hint);}
-    .macro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
-    .macro-box{background:var(--metric-bg);border-radius:10px;padding:10px 8px;text-align:center;}
-    .macro-box .val{font-size:18px;font-weight:700;color:var(--text);}
-    .macro-box .lbl{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;}
-    .macro-box .gram{font-size:11px;color:var(--muted);margin-top:1px;}
-    .tip-list{list-style:none;padding:0;}
-    .tip-list li{font-size:13px;color:var(--muted);padding:7px 0;border-bottom:0.5px solid var(--border);line-height:1.5;display:flex;gap:8px;align-items:flex-start;}
-    .tip-list li:last-child{border-bottom:none;}
-    .tip-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
-    .gain-status{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:12px;}
-    .gain-status.ok{background:#E1F5EE;color:#085041;border-left:3px solid #1D9E75;}
-    .gain-status.low{background:#FAEEDA;color:#633806;border-left:3px solid #FAC775;}
-    .gain-status.high{background:#FAECE7;color:#712B13;border-left:3px solid #F0997B;}
-    .cal-chart-wrap{position:relative;width:100%;height:200px;}
-    footer{text-align:center;font-size:11px;color:var(--hint);padding:12px 16px 8px;}
-    @media(min-width:480px){.metrics-grid{grid-template-columns:repeat(4,1fr);}.form-grid{grid-template-columns:repeat(4,1fr);}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#1D9E75;--green-dk:#0F6E56;
+  --amber:#BA7517;--amber-bg:#FAEEDA;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --pink:#993556;--pink-bg:#FBEAF0;
+  --bg:#f5f3ee;--card:#fff;--text:#1a1a18;--muted:#5f5e5a;--hint:#888780;
+  --border:rgba(0,0,0,0.11);--metric-bg:#f0ede8;--track:#e0ddd8;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+.app-header{background:var(--green);color:#fff;padding:16px 20px 18px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);}
+.app-header h1{font-size:20px;font-weight:700;}
+.app-header p{font-size:13px;opacity:.85;margin-top:2px;}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;}
+.tab{flex:1;padding:11px 2px;font-size:12px;font-weight:600;color:var(--hint);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s;}
+.tab.active{color:var(--green);border-bottom-color:var(--green);}
+.page{display:none;padding:14px;max-width:620px;margin:0 auto;}
+.page.active{display:block;}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.card-title{font-size:11px;font-weight:700;color:var(--hint);margin-bottom:12px;text-transform:uppercase;letter-spacing:.6px;}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
+input[type=date],input[type=number],select{width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,0.18);border-radius:10px;background:#fff;color:var(--text);font-size:15px;font-family:inherit;outline:none;}
+input[type=date]:focus,input[type=number]:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.15);}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.err{font-size:12px;color:#D85A30;margin-top:6px;display:none;}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:var(--track);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 1px var(--green);}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--green);border:3px solid #fff;}
+.badge-pill{display:inline-block;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
+.baby-card{text-align:center;padding:16px;}
+#baby-svg{display:block;margin:0 auto;}
+.stage-lbl{font-size:15px;font-weight:700;color:var(--text);margin-top:8px;}
+.fruit-card{display:flex;align-items:center;gap:14px;background:#fffdf8;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:14px;margin-bottom:12px;}
+.fsv{flex-shrink:0;width:82px;height:82px;display:flex;align-items:center;justify-content:center;}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
+.fsv svg{animation:bounce 2.8s ease-in-out infinite;filter:drop-shadow(0 3px 8px rgba(0,0,0,.13));}
+.fi .wlbl{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.fi .fname{font-size:18px;font-weight:800;color:var(--text);}
+.fi .fmsg{font-size:12px;color:var(--muted);margin-top:4px;font-style:italic;line-height:1.4;}
+.sbadge{display:inline-block;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
+.mg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;}
+.met{background:var(--metric-bg);border-radius:12px;padding:12px 10px;text-align:center;}
+.met .ml{font-size:10px;color:var(--hint);margin:0 0 4px;text-transform:uppercase;letter-spacing:.3px;}
+.met .mv{font-size:20px;font-weight:700;color:var(--text);margin:0;line-height:1.1;}
+.met .ms{font-size:11px;color:var(--muted);margin:3px 0 0;}
+.trimbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-bottom:5px;}
+.pt{background:var(--track);border-radius:4px;height:9px;overflow:hidden;margin:6px 0 4px;}
+.pf{height:100%;border-radius:4px;background:var(--green);transition:width .5s ease;}
+.cw{position:relative;width:100%;height:230px;}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap;margin-bottom:10px;}
+.legend span{display:flex;align-items:center;gap:5px;}
+.ldot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;}
+.onote{font-size:11px;color:var(--muted);background:var(--bg);border-radius:8px;padding:7px 10px;margin-top:10px;border-left:3px solid var(--green);line-height:1.5;}
+.slrow{display:flex;align-items:center;gap:12px;margin-top:14px;}
+.sllbl{font-size:12px;color:var(--muted);white-space:nowrap;margin:0;}
+.slval{font-size:14px;font-weight:700;color:var(--text);min-width:50px;text-align:right;}
+.slinfo{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px;}
+.dt{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.dd{font-size:14px;color:var(--muted);line-height:1.65;}
+.kh{text-align:center;padding:20px 16px 14px;}
+.kt{font-size:52px;font-weight:800;color:var(--green);line-height:1;}
+.ku{font-size:15px;color:var(--muted);margin-top:4px;}
+.ks{font-size:13px;color:var(--muted);margin-top:6px;}
+.ks2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.kb{border-radius:12px;padding:14px 12px;text-align:center;}
+.kb .kv{font-size:26px;font-weight:800;line-height:1;}
+.kb .kl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
+.kb .kd{font-size:11px;margin-top:3px;opacity:.8;}
+.kb.base{background:var(--blue-bg);color:var(--blue);}
+.kb.extra{background:var(--amber-bg);color:var(--amber);}
+.imc-bar{height:10px;border-radius:5px;background:linear-gradient(to right,#85B7EB,#97C459,#FAC775,#F0997B,#E24B4A);position:relative;margin:8px 0 4px;}
+.imc-cur{position:absolute;top:-3px;width:4px;height:16px;background:var(--text);border-radius:2px;transform:translateX(-50%);transition:left .4s;}
+.imc-lbs{display:flex;justify-content:space-between;font-size:10px;color:var(--hint);}
+.macg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.mab{background:var(--metric-bg);border-radius:10px;padding:10px 8px;text-align:center;}
+.mab .mv{font-size:18px;font-weight:700;color:var(--text);}
+.mab .ml{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+.mab .mg2{font-size:11px;color:var(--muted);margin-top:1px;}
+.tl{list-style:none;padding:0;}
+.tl li{font-size:13px;color:var(--muted);padding:7px 0;border-bottom:.5px solid var(--border);line-height:1.5;display:flex;gap:8px;align-items:flex-start;}
+.tl li:last-child{border-bottom:none;}
+.ti{font-size:16px;flex-shrink:0;margin-top:1px;}
+.gs{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:12px;}
+.gs.ok{background:#E1F5EE;color:#085041;border-left:3px solid #1D9E75;}
+.gs.low{background:#FAEEDA;color:#633806;border-left:3px solid #FAC775;}
+.gs.high{background:#FAECE7;color:#712B13;border-left:3px solid #F0997B;}
+.ccw{position:relative;width:100%;height:200px;}
+
+/* ── CALENDRIER POIDS ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-nav{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);}
+.cal-nav:hover{background:var(--metric-bg);}
+.cal-month{font-size:16px;font-weight:700;color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-day-name{font-size:10px;font-weight:700;color:var(--hint);text-align:center;padding:4px 0;text-transform:uppercase;}
+.cal-day{border-radius:8px;padding:4px 2px;text-align:center;cursor:pointer;transition:background .15s;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;}
+.cal-day:hover{background:var(--metric-bg);}
+.cal-day.empty{cursor:default;}
+.cal-day.today .dnum{background:var(--green);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-day.has-weight{background:#E1F5EE;}
+.cal-day.has-weight:hover{background:#c8eedd;}
+.cal-day.selected{outline:2px solid var(--green);outline-offset:1px;}
+.dnum{font-size:12px;font-weight:600;color:var(--text);width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-day.empty .dnum{color:transparent;}
+.wpill{font-size:10px;font-weight:700;color:var(--green-dk);background:rgba(29,158,117,.15);border-radius:4px;padding:1px 4px;white-space:nowrap;}
+.weight-input-row{display:flex;gap:10px;align-items:flex-end;margin-top:14px;padding-top:14px;border-top:.5px solid var(--border);}
+.weight-input-row > div:first-child{flex:1;}
+.weight-input-row button{background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.weight-input-row button:hover{background:var(--green-dk);}
+.weight-input-row button.del{background:#FAECE7;color:#712B13;}
+.weight-input-row button.del:hover{background:#F0997B;color:#fff;}
+.wstat{font-size:12px;color:var(--muted);margin-top:8px;}
+.wchw{position:relative;width:100%;height:240px;}
+.wsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+
+footer{text-align:center;font-size:11px;color:var(--hint);padding:12px 16px 8px;}
+@media(min-width:480px){.mg{grid-template-columns:repeat(4,1fr);}.fg{grid-template-columns:repeat(4,1fr);}}
   </style>
 </head>
 <body>
-<div class="app-header"><h1>Simulateur de grossesse</h1><p>Suivi bébé &amp; nutrition personnalisée</p></div>
+<div class="app-header"><h1>🌱 Suivi de grossesse</h1><p>Bébé · Nutrition · Mon poids</p></div>
 <div class="tabs">
-  <div class="tab active" onclick="showTab('tab-dates')">Dates</div>
-  <div class="tab" onclick="showTab('tab-bebe')">Bébé</div>
-  <div class="tab" onclick="showTab('tab-courbe')">Courbe</div>
-  <div class="tab" onclick="showTab('tab-nutri')">Nutrition</div>
+  <div class="tab active" onclick="showTab('t-dates')">Dates</div>
+  <div class="tab" onclick="showTab('t-bebe')">Bébé</div>
+  <div class="tab" onclick="showTab('t-courbe')">Courbe</div>
+  <div class="tab" onclick="showTab('t-nutri')">Nutrition</div>
+  <div class="tab" onclick="showTab('t-poids')">Mon poids</div>
 </div>
-<div class="page active" id="tab-dates">
+
+<!-- ══ DATES ══ -->
+<div class="page active" id="t-dates">
   <div class="card"><div class="card-title">Grossesse</div>
-    <div class="form-grid">
+    <div class="fg">
       <div><label>Date de conception</label><input type="date" id="g-conc"></div>
       <div><label>Date du jour</label><input type="date" id="g-today"></div>
     </div>
-    <div class="error-msg" id="g-error">La date du jour doit être après la conception.</div>
+    <div class="err" id="g-err">La date du jour doit être après la conception.</div>
   </div>
   <div class="card"><div class="card-title">Informations maman</div>
-    <div class="form-grid" style="margin-bottom:10px;">
-      <div><label>Taille (cm)</label><input type="number" id="m-taille" min="140" max="200" placeholder="165"></div>
-      <div><label>Poids avant grossesse (kg)</label><input type="number" id="m-poids-avant" min="40" max="150" step="0.1" placeholder="62"></div>
+    <div class="fg" style="margin-bottom:10px;">
+      <div><label>Taille (cm)</label><input type="number" id="m-t" min="140" max="200" placeholder="165"></div>
+      <div><label>Poids avant grossesse (kg)</label><input type="number" id="m-pa" min="40" max="150" step="0.1" placeholder="62"></div>
     </div>
-    <div class="form-grid">
-      <div><label>Poids actuel (kg)</label><input type="number" id="m-poids-actuel" min="40" max="160" step="0.1" placeholder="65"></div>
+    <div class="fg">
+      <div><label>Poids actuel (kg)</label><input type="number" id="m-pc" min="40" max="160" step="0.1" placeholder="65"></div>
       <div><label>Activité physique</label>
-        <select id="m-activite">
+        <select id="m-act">
           <option value="1.2">Sédentaire</option>
           <option value="1.375" selected>Légère (marche)</option>
           <option value="1.55">Modérée (3×/sem)</option>
@@ -130,54 +169,58 @@
       </div>
     </div>
   </div>
-  <div id="summary-card" style="display:none;" class="card"><div class="card-title">Résumé</div>
-    <div class="metrics-grid">
-      <div class="metric"><p class="metric-label">Semaine</p><p class="metric-value" id="s-week">—</p><p class="metric-sub">SA</p></div>
-      <div class="metric"><p class="metric-label">IMC initial</p><p class="metric-value" id="s-imc">—</p><p class="metric-sub" id="s-imc-lbl">—</p></div>
-      <div class="metric"><p class="metric-label">Prise de poids</p><p class="metric-value" id="s-gain">—</p><p class="metric-sub">kg depuis début</p></div>
-      <div class="metric"><p class="metric-label">Accouchement</p><p class="metric-value" id="s-due" style="font-size:13px;font-weight:700;">—</p><p class="metric-sub">&nbsp;</p></div>
+  <div id="sum-card" style="display:none;" class="card"><div class="card-title">Résumé</div>
+    <div class="mg">
+      <div class="met"><p class="ml">Semaine</p><p class="mv" id="s-w">—</p><p class="ms">SA</p></div>
+      <div class="met"><p class="ml">IMC initial</p><p class="mv" id="s-imc">—</p><p class="ms" id="s-imc-l">—</p></div>
+      <div class="met"><p class="ml">Prise de poids</p><p class="mv" id="s-g">—</p><p class="ms">kg</p></div>
+      <div class="met"><p class="ml">Accouchement</p><p class="mv" id="s-due" style="font-size:13px;font-weight:700;">—</p><p class="ms">&nbsp;</p></div>
     </div>
   </div>
-  <footer>OMS / ANSES / Intergrowth-21 / IOM</footer>
+  <footer>OMS · ANSES · Intergrowth-21 · IOM</footer>
 </div>
-<div class="page" id="tab-bebe">
-  <div id="bebe-content" style="display:none;">
+
+<!-- ══ BÉBÉ ══ -->
+<div class="page" id="t-bebe">
+  <div id="bebe-ok" style="display:none;">
     <div class="card baby-card">
       <div id="g-badge"></div>
       <svg id="baby-svg" width="150" height="180" viewBox="0 0 200 220"></svg>
-      <div class="stage-label" id="g-stage-label"></div>
+      <div class="stage-lbl" id="g-sl"></div>
     </div>
-    <div class="fruit-card" id="fruit-card">
-      <div class="fruit-svg-wrap" id="fruit-svg-wrap"></div>
-      <div class="fruit-info">
-        <div class="fruit-week-lbl">Taille comparée à...</div>
-        <div class="fruit-name" id="fruit-name">—</div>
-        <div class="fruit-msg" id="fruit-msg">—</div>
-        <span class="size-badge" id="fruit-size-badge">—</span>
+    <div class="fruit-card">
+      <div class="fsv" id="fsv"></div>
+      <div class="fi">
+        <div class="wlbl">Taille comparée à…</div>
+        <div class="fname" id="fname"></div>
+        <div class="fmsg" id="fmsg"></div>
+        <span class="sbadge" id="fsize"></span>
       </div>
     </div>
-    <div class="metrics-grid">
-      <div class="metric"><p class="metric-label">Semaine</p><p class="metric-value" id="b-week">—</p><p class="metric-sub">SA</p></div>
-      <div class="metric"><p class="metric-label">Poids bébé</p><p class="metric-value" id="b-weight">—</p><p class="metric-sub">&nbsp;</p></div>
-      <div class="metric"><p class="metric-label">Taille bébé</p><p class="metric-value" id="b-size">—</p><p class="metric-sub">&nbsp;</p></div>
-      <div class="metric"><p class="metric-label">Naissance prévue</p><p class="metric-value" id="b-due" style="font-size:13px;font-weight:700;">—</p><p class="metric-sub">&nbsp;</p></div>
+    <div class="mg">
+      <div class="met"><p class="ml">Semaine</p><p class="mv" id="b-w">—</p><p class="ms">SA</p></div>
+      <div class="met"><p class="ml">Poids bébé</p><p class="mv" id="b-wt">—</p><p class="ms">&nbsp;</p></div>
+      <div class="met"><p class="ml">Taille bébé</p><p class="mv" id="b-sz">—</p><p class="ms">&nbsp;</p></div>
+      <div class="met"><p class="ml">Naissance prévue</p><p class="mv" id="b-due" style="font-size:13px;font-weight:700;">—</p><p class="ms">&nbsp;</p></div>
     </div>
     <div class="card">
       <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Progression</div>
       <div class="trimbar"><div style="background:#9FE1CB;flex:13;"></div><div style="background:#FAC775;flex:14;"></div><div style="background:#F0997B;flex:13;"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--hint);margin-bottom:8px;"><span>SA 1</span><span>T1</span><span>T2</span><span>T3</span><span>SA 40</span></div>
-      <div class="prog-track"><div class="prog-fill" id="g-progress" style="width:0%;"></div></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="g-progress-label"></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--hint);margin-bottom:8px;"><span>SA1</span><span>T1</span><span>T2</span><span>T3</span><span>SA40</span></div>
+      <div class="pt"><div class="pf" id="g-prog" style="width:0%"></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="g-progl"></div>
     </div>
-    <div class="card" style="margin-bottom:0;"><div class="desc-title" id="g-desc-title">Développement</div><div class="desc-text" id="g-desc-text"></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="dt" id="g-dt">Développement</div><div class="dd" id="g-dd"></div></div>
   </div>
   <div id="bebe-empty" class="card" style="text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">🌱</div>Renseignez les dates dans l'onglet <strong>Dates</strong></div>
 </div>
-<div class="page" id="tab-courbe">
-  <div id="courbe-content" style="display:none;">
+
+<!-- ══ COURBE ══ -->
+<div class="page" id="t-courbe">
+  <div id="courbe-ok" style="display:none;">
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <div class="card-title" style="margin-bottom:0;">Courbe de poids bébé</div>
+        <div class="card-title" style="margin-bottom:0;">Poids bébé SA 4–40</div>
         <div class="legend">
           <span><span class="ldot" style="background:#9FE1CB;"></span>T1</span>
           <span><span class="ldot" style="background:#FAC775;"></span>T2</span>
@@ -185,117 +228,134 @@
           <span><span class="ldot" style="background:#D85A30;border-radius:50%;"></span>Vous</span>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="wChart"></canvas></div>
-      <div class="oms-note">Médiane Intergrowth-21 (OMS) — terme : <strong>3,3 kg</strong> en moyenne (normale 2,5–4,5 kg)</div>
-      <div class="slider-row">
-        <label class="slider-lbl">Explorer</label>
-        <input type="range" min="4" max="40" value="20" step="1" id="g-slider">
-        <span class="slider-val" id="g-slider-lbl">SA 20</span>
+      <div class="cw"><canvas id="wChart"></canvas></div>
+      <div class="onote">Médiane Intergrowth-21 (OMS) — terme : <strong>3,3 kg</strong> en moyenne (2,5–4,5 kg)</div>
+      <div class="slrow">
+        <label class="sllbl">Explorer</label>
+        <input type="range" min="4" max="40" value="20" step="1" id="g-sl2">
+        <span class="slval" id="g-slv">SA 20</span>
       </div>
-      <div class="slider-info" id="g-slider-info"></div>
+      <div class="slinfo" id="g-sli"></div>
     </div>
   </div>
-  <div id="courbe-empty" class="card" style="text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">📈</div>Renseignez les dates dans l'onglet <strong>Dates</strong></div>
+  <div id="courbe-empty" class="card" style="text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">📈</div>Renseignez les dates dans <strong>Dates</strong></div>
 </div>
-<div class="page" id="tab-nutri">
-  <div id="nutri-content" style="display:none;">
-    <div class="card kcal-hero">
+
+<!-- ══ NUTRITION ══ -->
+<div class="page" id="t-nutri">
+  <div id="nutri-ok" style="display:none;">
+    <div class="card kh">
       <div id="n-badge" style="margin-bottom:10px;"></div>
-      <div class="kcal-total" id="n-total">—</div>
-      <div class="kcal-unit">kcal / jour (apport total recommandé)</div>
-      <div class="kcal-sub" id="n-total-sub"></div>
+      <div class="kt" id="n-tot">—</div>
+      <div class="ku">kcal / jour (apport total recommandé)</div>
+      <div class="ks" id="n-sub"></div>
     </div>
-    <div class="kcal-split">
-      <div class="kcal-box base"><div class="val" id="n-base">—</div><div class="lbl">Besoins de base</div><div class="desc">Métabolisme + activité</div></div>
-      <div class="kcal-box extra"><div class="val" id="n-extra">—</div><div class="lbl">Supplément grossesse</div><div class="desc" id="n-extra-desc">Croissance du bébé</div></div>
+    <div class="ks2">
+      <div class="kb base"><div class="kv" id="n-base">—</div><div class="kl">Besoins de base</div><div class="kd">Métabolisme + activité</div></div>
+      <div class="kb extra"><div class="kv" id="n-extra">—</div><div class="kl">Supplément grossesse</div><div class="kd" id="n-ed"></div></div>
     </div>
-    <div id="gain-status-box" class="gain-status ok"></div>
+    <div id="n-gs" class="gs ok"></div>
     <div class="card">
       <div class="card-title">IMC avant grossesse</div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;"><span style="font-size:32px;font-weight:800;color:var(--text);" id="n-imc">—</span><span style="font-size:14px;color:var(--muted);" id="n-imc-lbl">—</span></div>
-      <div class="imc-bar"><div class="imc-cursor" id="imc-cursor" style="left:30%;"></div></div>
-      <div class="imc-labels"><span>16</span><span>18.5</span><span>25</span><span>30</span><span>40+</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px;" id="n-gain-reco"></div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;"><span style="font-size:32px;font-weight:800;color:var(--text);" id="n-imc">—</span><span style="font-size:14px;color:var(--muted);" id="n-imcl">—</span></div>
+      <div class="imc-bar"><div class="imc-cur" id="imc-cur" style="left:30%"></div></div>
+      <div class="imc-lbs"><span>16</span><span>18.5</span><span>25</span><span>30</span><span>40+</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;" id="n-gr"></div>
     </div>
     <div class="card">
-      <div class="card-title">Macronutriments recommandés / jour</div>
-      <div class="macro-grid">
-        <div class="macro-box"><div class="val" id="n-prot">—</div><div class="lbl">Protéines</div><div class="gram" id="n-prot-g">—</div></div>
-        <div class="macro-box"><div class="val" id="n-gluc">—</div><div class="lbl">Glucides</div><div class="gram" id="n-gluc-g">—</div></div>
-        <div class="macro-box"><div class="val" id="n-lip">—</div><div class="lbl">Lipides</div><div class="gram" id="n-lip-g">—</div></div>
+      <div class="card-title">Macronutriments / jour</div>
+      <div class="macg">
+        <div class="mab"><div class="mv" id="n-p">—</div><div class="ml">Protéines</div><div class="mg2">20% · 4 kcal/g</div></div>
+        <div class="mab"><div class="mv" id="n-gl">—</div><div class="ml">Glucides</div><div class="mg2">50% · 4 kcal/g</div></div>
+        <div class="mab"><div class="mv" id="n-l">—</div><div class="ml">Lipides</div><div class="mg2">30% · 9 kcal/g</div></div>
       </div>
     </div>
-    <div class="card"><div class="card-title">Évolution des besoins caloriques</div><div class="cal-chart-wrap"><canvas id="calChart"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="card-title">Conseils nutritionnels</div><ul class="tip-list" id="n-tips"></ul></div>
+    <div class="card"><div class="card-title">Évolution des besoins caloriques</div><div class="ccw"><canvas id="calChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="card-title">Conseils</div><ul class="tl" id="n-tips"></ul></div>
   </div>
   <div id="nutri-empty" class="card" style="text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">🥗</div>Renseignez les <strong>dates</strong> et les <strong>infos maman</strong></div>
 </div>
+
+<!-- ══ MON POIDS ══ -->
+<div class="page" id="t-poids">
+  <div id="poids-ok" style="display:none;">
+
+    <div class="wsum">
+      <div class="met"><p class="ml">Dernier poids</p><p class="mv" id="wp-last">—</p><p class="ms">kg</p></div>
+      <div class="met"><p class="ml">Prise totale</p><p class="mv" id="wp-gain">—</p><p class="ms">depuis début</p></div>
+      <div class="met"><p class="ml">Pesées</p><p class="mv" id="wp-count">0</p><p class="ms">enregistrées</p></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Courbe de poids maman</div>
+      <div class="wchw"><canvas id="wMomChart"></canvas></div>
+      <div class="onote" id="mom-note">Saisissez votre poids via le calendrier ci-dessous</div>
+    </div>
+
+    <div class="card">
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev">‹</button>
+        <div class="cal-month" id="cal-month">—</div>
+        <button class="cal-nav" id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="weight-input-row">
+        <div>
+          <label id="sel-date-lbl" style="font-weight:600;color:var(--text);">Sélectionnez un jour</label>
+          <input type="number" id="w-input" min="30" max="200" step="0.1" placeholder="Ex: 63.5 kg">
+        </div>
+        <button onclick="saveWeight()">Enregistrer</button>
+        <button class="del" onclick="deleteWeight()">Suppr.</button>
+      </div>
+      <div class="wstat" id="wstat"></div>
+    </div>
+
+  </div>
+  <div id="poids-empty" class="card" style="text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">⚖️</div>Renseignez vos dates dans <strong>Dates</strong> pour activer le suivi</div>
+</div>
 <script>
-function showTab(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById(id).classList.add('active');['tab-dates','tab-bebe','tab-courbe','tab-nutri'].forEach((tid,i)=>{if(tid===id)document.querySelectorAll('.tab')[i].classList.add('active');});}
+/* ══ SERVICE WORKER ══ */
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 
-const FRUITS={
-pavot:{name:"un grain de pavot",msg:"Microscopique mais déjà là ! Vous êtes au tout début 💪",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="42" rx="14" ry="17" fill="#7B5EA7"/><ellipse cx="36" cy="42" rx="10" ry="13" fill="#9B7ECB"/><ellipse cx="30" cy="37" rx="4" ry="5" fill="#B8A0E0" opacity="0.5"/><circle cx="30" cy="37" r="2.5" fill="#1a1a18"/><circle cx="42" cy="37" r="2.5" fill="#1a1a18"/><circle cx="31" cy="36" r="1" fill="#fff"/><circle cx="43" cy="36" r="1" fill="#fff"/><path d="M30 44 Q36 50 42 44" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M36 25 Q34 18 36 12" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="33" cy="12" rx="5" ry="3" fill="#27AE60" transform="rotate(-20 33 12)"/></svg>'},
-sesame:{name:"une graine de sésame",msg:"Minuscule et déjà unique ! Le cœur bat 🫀",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="42" rx="11" ry="17" fill="#D4A843" transform="rotate(-8 36 42)"/><ellipse cx="34" cy="38" rx="7" ry="11" fill="#E8C870" opacity="0.6" transform="rotate(-8 34 38)"/><circle cx="30" cy="37" r="2" fill="#1a1a18"/><circle cx="40" cy="39" r="2" fill="#1a1a18"/><circle cx="31" cy="36" r="0.8" fill="#fff"/><circle cx="41" cy="38" r="0.8" fill="#fff"/><path d="M30 44 Q35 49 41 46" fill="none" stroke="#1a1a18" stroke-width="1.8" stroke-linecap="round"/><circle cx="32" cy="33" r="1" fill="#fff" opacity="0.6"/></svg>'},
-lentille:{name:"une lentille",msg:"Tout rond, tout mignon ! 🤎",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="20" ry="15" fill="#7B4F2E"/><ellipse cx="36" cy="40" rx="16" ry="11" fill="#9B6B45"/><ellipse cx="29" cy="35" rx="5" ry="4" fill="#BE8A64" opacity="0.4"/><circle cx="29" cy="37" r="3" fill="#1a1a18"/><circle cx="43" cy="37" r="3" fill="#1a1a18"/><circle cx="30" cy="36" r="1.2" fill="#fff"/><circle cx="44" cy="36" r="1.2" fill="#fff"/><path d="M29 44 Q36 50 43 44" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M33 54 Q36 59 33 62" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-linecap="round"/></svg>'},
-myrtille:{name:"un myrtille",msg:"Bleu comme ses petits yeux à venir ! 💙",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="42" r="19" fill="#3D2F85"/><circle cx="36" cy="42" r="16" fill="#5244A8"/><circle cx="28" cy="36" r="5" fill="#6B5CC0" opacity="0.5"/><path d="M27 27 Q36 22 45 27" fill="none" stroke="#2D2060" stroke-width="3.5" stroke-linecap="round"/><circle cx="28" cy="38" r="3.5" fill="#1a1a18"/><circle cx="44" cy="38" r="3.5" fill="#1a1a18"/><circle cx="29" cy="37" r="1.4" fill="#fff"/><circle cx="45" cy="37" r="1.4" fill="#fff"/><path d="M28 46 Q36 53 44 46" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-framboise:{name:"une framboise",msg:"Plein de petites alvéoles comme ses cellules ! 🔴",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="28" cy="38" r="10" fill="#C0392B"/><circle cx="44" cy="38" r="10" fill="#C0392B"/><circle cx="36" cy="30" r="10" fill="#C0392B"/><circle cx="36" cy="46" r="10" fill="#C0392B"/><circle cx="28" cy="38" r="7.5" fill="#E74C3C"/><circle cx="44" cy="38" r="7.5" fill="#E74C3C"/><circle cx="36" cy="30" r="7.5" fill="#E74C3C"/><circle cx="36" cy="46" r="7.5" fill="#E74C3C"/><circle cx="28" cy="38" r="3" fill="#1a1a18"/><circle cx="44" cy="38" r="3" fill="#1a1a18"/><circle cx="29" cy="37" r="1.2" fill="#fff"/><circle cx="45" cy="37" r="1.2" fill="#fff"/><path d="M27 44 Q36 53 45 44" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M36 20 Q33 13 35 8" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/><ellipse cx="33" cy="8" rx="5" ry="3" fill="#2ECC71" transform="rotate(-30 33 8)"/><ellipse cx="39" cy="9" rx="5" ry="3" fill="#27AE60" transform="rotate(25 39 9)"/></svg>'},
-cerise:{name:"une cerise",msg:"Rouge et joufflu… c\'est parti ! 🍒",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="25" cy="44" r="14" fill="#C0392B"/><circle cx="25" cy="44" r="11" fill="#E74C3C"/><circle cx="21" cy="39" r="4" fill="#EC7063" opacity="0.5"/><circle cx="23" cy="41" r="3" fill="#1a1a18"/><circle cx="27" cy="41" r="3" fill="#1a1a18"/><circle cx="24" cy="40" r="1.2" fill="#fff"/><circle cx="28" cy="40" r="1.2" fill="#fff"/><path d="M22 47 Q25 52 28 47" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><circle cx="47" cy="44" r="14" fill="#922B21"/><circle cx="47" cy="44" r="11" fill="#C0392B"/><circle cx="43" cy="39" r="4" fill="#D98880" opacity="0.4"/><circle cx="45" cy="41" r="3" fill="#1a1a18"/><circle cx="49" cy="41" r="3" fill="#1a1a18"/><circle cx="46" cy="40" r="1.2" fill="#fff"/><circle cx="50" cy="40" r="1.2" fill="#fff"/><path d="M44 47 Q47 52 50 47" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M25 30 Q34 18 47 30" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/><path d="M35 21 Q35 14 35 10" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round"/><ellipse cx="35" cy="9" rx="4" ry="2.5" fill="#27AE60"/></svg>'},
-fraise:{name:"une fraise",msg:"Ses petits doigts se forment ! 🍓",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="19" ry="21" fill="#E74C3C"/><ellipse cx="36" cy="44" rx="15" ry="17" fill="#EC7063"/><ellipse cx="28" cy="38" rx="6" ry="7" fill="#F1948A" opacity="0.4"/><circle cx="28" cy="40" r="3" fill="#1a1a18"/><circle cx="44" cy="40" r="3" fill="#1a1a18"/><circle cx="29" cy="39" r="1.2" fill="#fff"/><circle cx="45" cy="39" r="1.2" fill="#fff"/><path d="M28 47 Q36 55 44 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><circle cx="36" cy="34" r="2" fill="#C0392B"/><circle cx="28" cy="48" r="2" fill="#C0392B"/><circle cx="44" cy="50" r="2" fill="#C0392B"/><path d="M26 23 Q30 14 36 10 Q42 14 46 23" fill="#27AE60"/><ellipse cx="24" cy="23" rx="7" ry="4" fill="#2ECC71" transform="rotate(-30 24 23)"/><ellipse cx="48" cy="23" rx="7" ry="4" fill="#27AE60" transform="rotate(30 48 23)"/></svg>'},
-figue:{name:"une figue",msg:"Ses os se durcissent, il prend forme ! 💜",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="17" ry="21" fill="#7D3C98"/><ellipse cx="36" cy="44" rx="13" ry="17" fill="#9B59B6"/><ellipse cx="29" cy="37" rx="5" ry="7" fill="#BB8FCE" opacity="0.4"/><circle cx="29" cy="39" r="3" fill="#1a1a18"/><circle cx="43" cy="39" r="3" fill="#1a1a18"/><circle cx="30" cy="38" r="1.2" fill="#fff"/><circle cx="44" cy="38" r="1.2" fill="#fff"/><path d="M30 47 Q36 54 42 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="25" rx="7" ry="6" fill="#5D2D7A"/><path d="M36 23 Q35 16 36 11" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="10" rx="4" ry="3" fill="#27AE60"/></svg>'},
-citron_vert:{name:"un citron vert",msg:"FIN DU T1 ! Bébé est bien accroché 💚🎉",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="22" ry="20" fill="#229954"/><ellipse cx="36" cy="40" rx="18" ry="16" fill="#2ECC71"/><ellipse cx="27" cy="33" rx="7" ry="6" fill="#58D68D" opacity="0.4"/><circle cx="27" cy="36" r="3.5" fill="#1a1a18"/><circle cx="45" cy="36" r="3.5" fill="#1a1a18"/><circle cx="28" cy="35" r="1.4" fill="#fff"/><circle cx="46" cy="35" r="1.4" fill="#fff"/><path d="M27 44 Q36 52 45 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><ellipse cx="50" cy="25" rx="7" ry="4" fill="#1E8449" transform="rotate(40 50 25)"/><path d="M45 29 Q47 25 50 27" fill="none" stroke="#196F3D" stroke-width="1.5"/></svg>'},
-peche:{name:"une pêche",msg:"Tout doux, duveteux comme ses premiers cheveux ! 🍑",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="22" fill="#E8950A"/><circle cx="36" cy="40" r="19" fill="#F5B942"/><circle cx="27" cy="33" r="7" fill="#F8C96A" opacity="0.4"/><path d="M36 18 Q39 14 36 10 Q33 14 36 18" fill="#CA7309"/><circle cx="28" cy="36" r="3.5" fill="#1a1a18"/><circle cx="44" cy="36" r="3.5" fill="#1a1a18"/><circle cx="29" cy="35" r="1.4" fill="#fff"/><circle cx="45" cy="35" r="1.4" fill="#fff"/><path d="M28 44 Q36 52 44 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><path d="M35 10 Q38 5 37 2" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/><ellipse cx="37" cy="2" rx="4" ry="2.5" fill="#2ECC71" transform="rotate(20 37 2)"/></svg>'},
-citron:{name:"un citron",msg:"Acide comme les envies de maman ? 🍋",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="24" ry="18" fill="#E8C22A"/><ellipse cx="36" cy="40" rx="20" ry="14" fill="#F7DC6F"/><ellipse cx="27" cy="34" rx="7" ry="6" fill="#FDEBD0" opacity="0.4"/><ellipse cx="10" cy="38" rx="6" ry="5" fill="#E8C22A"/><ellipse cx="62" cy="38" rx="6" ry="5" fill="#E8C22A"/><circle cx="27" cy="37" r="3.5" fill="#1a1a18"/><circle cx="45" cy="37" r="3.5" fill="#1a1a18"/><circle cx="28" cy="36" r="1.4" fill="#fff"/><circle cx="46" cy="36" r="1.4" fill="#fff"/><path d="M27 44 Q36 52 45 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><path d="M44 26 Q48 21 50 23" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/><ellipse cx="51" cy="22" rx="5" ry="3" fill="#2ECC71" transform="rotate(30 51 22)"/></svg>'},
-avocat:{name:"un avocat",msg:"Il vous entend parler ! Chantez-lui une chanson 🥑🎵",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="18" ry="25" fill="#229954"/><ellipse cx="36" cy="43" rx="14" ry="21" fill="#2ECC71"/><ellipse cx="36" cy="47" rx="10" ry="14" fill="#E59866" opacity="0.95"/><ellipse cx="36" cy="47" rx="7" ry="9" fill="#CA6F1E"/><ellipse cx="29" cy="36" rx="5" ry="5" fill="#58D68D" opacity="0.35"/><circle cx="29" cy="38" r="3.5" fill="#1a1a18"/><circle cx="43" cy="38" r="3.5" fill="#1a1a18"/><circle cx="30" cy="37" r="1.4" fill="#fff"/><circle cx="44" cy="37" r="1.4" fill="#fff"/><path d="M29 46 Q36 54 43 46" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M36 18 Q35 11 36 7" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-patate_douce:{name:"une patate douce",msg:"Il donne ses premiers coups de pied ! Sentez-vous ? 🦵",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="26" ry="18" fill="#C0392B" transform="rotate(-8 36 40)"/><ellipse cx="36" cy="40" rx="22" ry="14" fill="#E85D04" transform="rotate(-8 36 40)"/><ellipse cx="26" cy="33" rx="8" ry="6" fill="#F4A261" opacity="0.4" transform="rotate(-8 26 33)"/><circle cx="27" cy="37" r="3.5" fill="#1a1a18"/><circle cx="43" cy="39" r="3.5" fill="#1a1a18"/><circle cx="28" cy="36" r="1.4" fill="#fff"/><circle cx="44" cy="38" r="1.4" fill="#fff"/><path d="M27 45 Q35 51 44 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M12 34 Q9 31 11 27" fill="none" stroke="#922B21" stroke-width="2" stroke-linecap="round"/><path d="M60 42 Q64 39 62 35" fill="none" stroke="#922B21" stroke-width="2" stroke-linecap="round"/></svg>'},
-banane:{name:"une banane",msg:"MI-GROSSESSE ! Il fait des galipettes 🍌🤸",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><path d="M13 54 Q18 20 52 14 Q61 13 63 20 Q57 22 50 22 Q28 25 22 55 Z" fill="#E8C22A"/><path d="M15 52 Q20 22 51 16 Q59 15 60 20 Q54 21 48 22 Q27 26 22 53 Z" fill="#F7DC6F"/><circle cx="31" cy="33" r="3.5" fill="#1a1a18"/><circle cx="43" cy="28" r="3.5" fill="#1a1a18"/><circle cx="32" cy="32" r="1.4" fill="#fff"/><circle cx="44" cy="27" r="1.4" fill="#fff"/><path d="M30 40 Q37 46 45 35" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M51 14 Q55 9 54 6" fill="none" stroke="#9B7D0A" stroke-width="2" stroke-linecap="round"/></svg>'},
-epi_mais:{name:"un épi de maïs",msg:"Il voit la lumière et entend de la musique ! 🌽🎶",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="14" ry="24" fill="#E8C22A"/><ellipse cx="36" cy="43" rx="11" ry="21" fill="#F9E79F"/><ellipse cx="30" cy="35" rx="4" ry="6" fill="#FDEBD0" opacity="0.4"/><circle cx="30" cy="33" r="2.2" fill="#E8C22A"/><circle cx="36" cy="31" r="2.2" fill="#E8C22A"/><circle cx="42" cy="33" r="2.2" fill="#E8C22A"/><circle cx="30" cy="39" r="2.2" fill="#E8C22A"/><circle cx="36" cy="37" r="2.2" fill="#E8C22A"/><circle cx="42" cy="39" r="2.2" fill="#E8C22A"/><circle cx="30" cy="45" r="2.2" fill="#E8C22A"/><circle cx="36" cy="43" r="2.2" fill="#E8C22A"/><circle cx="42" cy="45" r="2.2" fill="#E8C22A"/><circle cx="29" cy="35" r="3.5" fill="#1a1a18"/><circle cx="43" cy="35" r="3.5" fill="#1a1a18"/><circle cx="30" cy="34" r="1.4" fill="#fff"/><circle cx="44" cy="34" r="1.4" fill="#fff"/><path d="M29 50 Q36 57 43 50" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M24 31 Q17 22 21 16" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/><path d="M48 29 Q55 20 51 14" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round"/><path d="M36 19 Q36 11 36 7" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-laitue:{name:"une laitue romaine",msg:"Les yeux s\'ouvrent ! Le bébé vous regarde (presque) 👁️",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="47" rx="15" ry="20" fill="#229954"/><ellipse cx="36" cy="47" rx="11" ry="16" fill="#58D68D"/><path d="M21 38 Q28 24 36 20 Q44 24 51 38" fill="#2ECC71"/><path d="M16 44 Q24 28 36 22 Q48 28 56 44" fill="#229954" opacity="0.65"/><ellipse cx="28" cy="40" rx="5" ry="6" fill="#7DCEA0" opacity="0.35"/><circle cx="28" cy="40" r="3.5" fill="#1a1a18"/><circle cx="44" cy="40" r="3.5" fill="#1a1a18"/><circle cx="29" cy="39" r="1.4" fill="#fff"/><circle cx="45" cy="39" r="1.4" fill="#fff"/><path d="M28 48 Q36 56 44 48" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-aubergine:{name:"une aubergine",msg:"Bienvenue au T3 ! La ligne droite 🍆🏁",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="46" rx="16" ry="23" fill="#6C3483"/><ellipse cx="36" cy="46" rx="12" ry="19" fill="#8E44AD"/><ellipse cx="29" cy="38" rx="5" ry="8" fill="#A569BD" opacity="0.35"/><path d="M27 23 Q31 17 36 15 Q41 17 45 23" fill="#229954"/><ellipse cx="36" cy="16" rx="6" ry="4" fill="#2ECC71"/><path d="M36 15 Q35 9 36 5" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linecap="round"/><circle cx="29" cy="40" r="3.5" fill="#1a1a18"/><circle cx="43" cy="40" r="3.5" fill="#1a1a18"/><circle cx="30" cy="39" r="1.4" fill="#fff"/><circle cx="44" cy="39" r="1.4" fill="#fff"/><path d="M29 50 Q36 58 43 50" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-chou:{name:"un chou frisé",msg:"Il rêve peut-être de vous (sommeil REM) ! 💭😴",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="22" fill="#229954"/><circle cx="36" cy="40" r="18" fill="#2ECC71"/><ellipse cx="36" cy="40" rx="13" ry="9" fill="#58D68D"/><path d="M14 31 Q20 20 31 23 Q25 31 28 37" fill="#1E8449" opacity="0.75"/><path d="M58 31 Q52 20 41 23 Q47 31 44 37" fill="#196F3D" opacity="0.75"/><path d="M18 53 Q24 62 36 58 Q48 62 54 53" fill="#229954" opacity="0.65"/><circle cx="28" cy="37" r="3.5" fill="#1a1a18"/><circle cx="44" cy="37" r="3.5" fill="#1a1a18"/><circle cx="29" cy="36" r="1.4" fill="#fff"/><circle cx="45" cy="36" r="1.4" fill="#fff"/><path d="M28 45 Q36 53 44 45" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-ananas:{name:"un ananas",msg:"Il se retourne tête en bas… il se prépare ! 🍍",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="47" rx="17" ry="22" fill="#E59866"/><ellipse cx="36" cy="47" rx="14" ry="19" fill="#F4C430"/><line x1="21" y1="38" x2="51" y2="56" stroke="#C68B22" stroke-width="1.8"/><line x1="51" y1="38" x2="21" y2="56" stroke="#C68B22" stroke-width="1.8"/><line x1="36" y1="28" x2="36" y2="66" stroke="#C68B22" stroke-width="1.8"/><line x1="21" y1="47" x2="51" y2="47" stroke="#C68B22" stroke-width="1.8"/><path d="M26 21 Q30 13 36 9 Q42 13 46 21" fill="#229954"/><path d="M30 19 Q32 11 36 7" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round"/><path d="M42 19 Q40 11 36 7" fill="none" stroke="#1E8449" stroke-width="2" stroke-linecap="round"/><path d="M36 9 Q36 3 36 1" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="40" r="3.5" fill="#1a1a18"/><circle cx="44" cy="40" r="3.5" fill="#1a1a18"/><circle cx="29" cy="39" r="1.4" fill="#fff"/><circle cx="45" cy="39" r="1.4" fill="#fff"/><path d="M28 50 Q36 58 44 50" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-cantaloup:{name:"un cantaloup",msg:"Ses poumons préparent leur premier cri ! 🍈",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="24" fill="#C0392B"/><circle cx="36" cy="40" r="21" fill="#E67E22"/><path d="M36 16 Q36 64 36 64" fill="none" stroke="#C0511A" stroke-width="1.8"/><path d="M13 34 Q59 46 59 46" fill="none" stroke="#C0511A" stroke-width="1.8"/><path d="M15 50 Q57 30 57 30" fill="none" stroke="#C0511A" stroke-width="1.8"/><circle cx="26" cy="34" r="6" fill="#FAD7A0" opacity="0.35"/><circle cx="27" cy="36" r="3.5" fill="#1a1a18"/><circle cx="45" cy="36" r="3.5" fill="#1a1a18"/><circle cx="28" cy="35" r="1.4" fill="#fff"/><circle cx="46" cy="35" r="1.4" fill="#fff"/><path d="M28 44 Q36 52 44 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><path d="M34 16 Q36 10 38 16" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-papaye:{name:"une papaye",msg:"À terme précoce ! Bébé est presque prêt 🌟",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="18" ry="26" fill="#C0392B"/><ellipse cx="36" cy="43" rx="14" ry="22" fill="#E67E22"/><ellipse cx="36" cy="47" rx="9" ry="14" fill="#CA6F1E" opacity="0.45"/><ellipse cx="28" cy="34" rx="5" ry="8" fill="#FAD7A0" opacity="0.35"/><circle cx="28" cy="36" r="3.5" fill="#1a1a18"/><circle cx="44" cy="36" r="3.5" fill="#1a1a18"/><circle cx="29" cy="35" r="1.4" fill="#fff"/><circle cx="45" cy="35" r="1.4" fill="#fff"/><path d="M28 45 Q36 53 44 45" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M28 17 Q31 11 36 9 Q41 11 44 17" fill="#229954"/><path d="M36 9 Q36 4 36 1" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round"/></svg>'},
-citrouille:{name:"une citrouille",msg:"Il prend position… la naissance approche !! 🎃🍼",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="24" ry="21" fill="#CA6F1E"/><ellipse cx="24" cy="44" rx="11" ry="19" fill="#E67E22"/><ellipse cx="36" cy="44" rx="11" ry="19" fill="#F39C12"/><ellipse cx="48" cy="44" rx="11" ry="19" fill="#E67E22"/><line x1="36" y1="25" x2="36" y2="63" stroke="#CA6F1E" stroke-width="2.2"/><circle cx="27" cy="38" r="4" fill="#1a1a18"/><circle cx="45" cy="38" r="4" fill="#1a1a18"/><circle cx="28" cy="37" r="1.6" fill="#fff"/><circle cx="46" cy="37" r="1.6" fill="#fff"/><path d="M27 48 Q36 57 45 48" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><path d="M33 23 Q34 17 36 13" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="12" rx="5" ry="3" fill="#27AE60"/></svg>'},
-pasteque:{name:"une pastèque",msg:"TERME ! 🍉🎉 Bébé est prêt — vous aussi !",svg:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="42" r="25" fill="#229954"/><circle cx="36" cy="42" r="23" fill="#2ECC71"/><circle cx="36" cy="42" r="20" fill="#E74C3C"/><circle cx="36" cy="42" r="17" fill="#EC7063"/><circle cx="28" cy="38" r="2.2" fill="#1a1a18"/><circle cx="37" cy="34" r="2.2" fill="#1a1a18"/><circle cx="44" cy="38" r="2.2" fill="#1a1a18"/><circle cx="28" cy="46" r="2.2" fill="#1a1a18"/><circle cx="44" cy="46" r="2.2" fill="#1a1a18"/><circle cx="27" cy="38" r="4" fill="#1a1a18"/><circle cx="45" cy="38" r="4" fill="#1a1a18"/><circle cx="28" cy="37" r="1.6" fill="#fff"/><circle cx="46" cy="37" r="1.6" fill="#fff"/><path d="M26 47 Q36 58 46 47" fill="none" stroke="#1a1a18" stroke-width="3.5" stroke-linecap="round"/><path d="M34 17 Q35 11 36 7" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="6" rx="4" ry="3" fill="#1E8449"/></svg>'}
-};
-
-function getFruitKey(w){
-  if(w<=4)return'pavot';if(w<=5)return'sesame';if(w<=6)return'lentille';if(w<=7)return'myrtille';
-  if(w<=8)return'framboise';if(w<=9)return'cerise';if(w<=10)return'fraise';if(w<=11)return'figue';
-  if(w<=13)return'citron_vert';if(w<=14)return'peche';if(w<=16)return'citron';if(w<=18)return'avocat';
-  if(w<=19)return'patate_douce';if(w<=22)return'banane';if(w<=26)return'epi_mais';if(w<=27)return'laitue';
-  if(w<=29)return'aubergine';if(w<=31)return'chou';if(w<=33)return'ananas';if(w<=35)return'cantaloup';
-  if(w<=37)return'papaye';if(w<=39)return'citrouille';return'pasteque';
+/* ══ TABS ══ */
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ['t-dates','t-bebe','t-courbe','t-nutri','t-poids'].forEach((tid,i)=>{if(tid===id)document.querySelectorAll('.tab')[i].classList.add('active');});
+  if(id==='t-poids')renderCalendar();
 }
 
-const WD=[
-  {w:4,g:.0005,cm:.10,desc:"L'œuf s'implante dans l'utérus. Le tube neural se forme."},
-  {w:5,g:.001,cm:.13,desc:"Le cœur commence à battre ! Les bourgeons des membres apparaissent."},
-  {w:6,g:.002,cm:.30,desc:"Les traits du visage se dessinent. Le cerveau se développe."},
-  {w:7,g:.003,cm:.80,desc:"Bras et jambes s'allongent. Le foie produit des cellules sanguines."},
-  {w:8,g:.004,cm:1.6,desc:"Tous les organes essentiels sont formés. Les doigts se séparent."},
-  {w:9,g:.007,cm:2.3,desc:"Le bébé bouge déjà, même si vous ne le sentez pas."},
-  {w:10,g:.014,cm:3.1,desc:"Les organes génitaux se forment. Les ongles poussent."},
-  {w:11,g:.025,cm:4.1,desc:"Il ouvre et ferme les poings. Les os se durcissent."},
-  {w:12,g:.058,cm:5.4,desc:"Fin du T1 ! Le risque de fausse couche diminue fortement."},
-  {w:13,g:.081,cm:7.4,desc:"Les empreintes digitales se forment. Il suce son pouce."},
-  {w:14,g:.110,cm:8.7,desc:"Le sexe peut être visible à l'écho. Le lanugo recouvre le corps."},
-  {w:16,g:.200,cm:11.6,desc:"Les yeux bougent. Il entend vos voix pour la première fois."},
-  {w:18,g:.310,cm:14.2,desc:"Les premiers coups de pied peuvent être ressentis !"},
-  {w:20,g:.460,cm:25.0,desc:"Mi-grossesse ! Échographie morphologique. Il avale du liquide amniotique."},
-  {w:22,g:.630,cm:27.8,desc:"Sourcils et cils apparaissent. Le sens du toucher est développé."},
-  {w:24,g:.820,cm:30.0,desc:"Les poumons se développent. Il réagit aux sons extérieurs."},
-  {w:26,g:1.02,cm:33.0,desc:"Les yeux s'ouvrent ! Le cerveau est très actif."},
-  {w:28,g:1.23,cm:35.0,desc:"Début du T3. Il prend de la graisse sous-cutanée."},
-  {w:30,g:1.46,cm:37.5,desc:"Le cerveau se plisse. Le bébé fait des rêves (sommeil REM)."},
-  {w:32,g:1.70,cm:39.5,desc:"Les ongles atteignent les doigts. Il se retourne tête en bas."},
-  {w:34,g:2.00,cm:42.0,desc:"Les poumons arrivent à maturité. Il prend ~200 g/semaine."},
-  {w:36,g:2.40,cm:45.0,desc:"'À terme précoce'. Il gagne du poids chaque jour."},
-  {w:38,g:2.90,cm:48.0,desc:"Il est prêt à naître et prend position dans le bassin."},
-  {w:39,g:3.10,cm:49.5,desc:"Quasi à terme. Tous les organes sont matures."},
-  {w:40,g:3.30,cm:50.5,desc:"Terme ! Poids médian 3 300 g, ~50 cm. Bébé prêt pour le monde."}
-];
+/* ══ FRUITS ══ */
+const FR={
+pavot:{n:"un grain de pavot",m:"Microscopique mais déjà là ! 💪",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="42" rx="14" ry="17" fill="#7B5EA7"/><ellipse cx="36" cy="42" rx="10" ry="13" fill="#9B7ECB"/><circle cx="30" cy="37" r="2.5" fill="#1a1a18"/><circle cx="42" cy="37" r="2.5" fill="#1a1a18"/><circle cx="31" cy="36" r="1" fill="#fff"/><circle cx="43" cy="36" r="1" fill="#fff"/><path d="M30 44 Q36 50 42 44" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M36 25 Q34 18 36 12" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="33" cy="12" rx="5" ry="3" fill="#27AE60" transform="rotate(-20 33 12)"/></svg>'},
+sesame:{n:"une graine de sésame",m:"Minuscule et le cœur bat ! 🫀",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="42" rx="11" ry="17" fill="#D4A843" transform="rotate(-8 36 42)"/><ellipse cx="34" cy="38" rx="7" ry="11" fill="#E8C870" opacity="0.6" transform="rotate(-8 34 38)"/><circle cx="30" cy="37" r="2" fill="#1a1a18"/><circle cx="40" cy="39" r="2" fill="#1a1a18"/><circle cx="31" cy="36" r="0.8" fill="#fff"/><circle cx="41" cy="38" r="0.8" fill="#fff"/><path d="M30 44 Q35 49 41 46" fill="none" stroke="#1a1a18" stroke-width="1.8" stroke-linecap="round"/></svg>'},
+lentille:{n:"une lentille",m:"Tout rond, tout mignon ! 🤎",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="20" ry="15" fill="#7B4F2E"/><ellipse cx="36" cy="40" rx="16" ry="11" fill="#9B6B45"/><circle cx="29" cy="37" r="3" fill="#1a1a18"/><circle cx="43" cy="37" r="3" fill="#1a1a18"/><circle cx="30" cy="36" r="1.2" fill="#fff"/><circle cx="44" cy="36" r="1.2" fill="#fff"/><path d="M29 44 Q36 50 43 44" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/></svg>'},
+myrtille:{n:"un myrtille",m:"Bleu comme ses futurs yeux ! 💙",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="42" r="19" fill="#3D2F85"/><circle cx="36" cy="42" r="16" fill="#5244A8"/><path d="M27 27 Q36 22 45 27" fill="none" stroke="#2D2060" stroke-width="3.5" stroke-linecap="round"/><circle cx="28" cy="38" r="3.5" fill="#1a1a18"/><circle cx="44" cy="38" r="3.5" fill="#1a1a18"/><circle cx="29" cy="37" r="1.4" fill="#fff"/><circle cx="45" cy="37" r="1.4" fill="#fff"/><path d="M28 46 Q36 53 44 46" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+framboise:{n:"une framboise",m:"Ses cellules se multiplient ! 🔴",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="28" cy="38" r="10" fill="#C0392B"/><circle cx="44" cy="38" r="10" fill="#C0392B"/><circle cx="36" cy="30" r="10" fill="#C0392B"/><circle cx="36" cy="46" r="10" fill="#C0392B"/><circle cx="28" cy="38" r="7.5" fill="#E74C3C"/><circle cx="44" cy="38" r="7.5" fill="#E74C3C"/><circle cx="36" cy="30" r="7.5" fill="#E74C3C"/><circle cx="36" cy="46" r="7.5" fill="#E74C3C"/><circle cx="28" cy="38" r="3" fill="#1a1a18"/><circle cx="44" cy="38" r="3" fill="#1a1a18"/><circle cx="29" cy="37" r="1.2" fill="#fff"/><circle cx="45" cy="37" r="1.2" fill="#fff"/><path d="M27 44 Q36 53 45 44" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M36 20 Q33 13 35 8" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/></svg>'},
+cerise:{n:"une cerise",m:"Rouge et joufflu… c\'est parti ! 🍒",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="25" cy="44" r="14" fill="#C0392B"/><circle cx="25" cy="44" r="11" fill="#E74C3C"/><circle cx="23" cy="41" r="3" fill="#1a1a18"/><circle cx="27" cy="41" r="3" fill="#1a1a18"/><circle cx="24" cy="40" r="1.2" fill="#fff"/><circle cx="28" cy="40" r="1.2" fill="#fff"/><path d="M22 47 Q25 52 28 47" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><circle cx="47" cy="44" r="14" fill="#922B21"/><circle cx="47" cy="44" r="11" fill="#C0392B"/><circle cx="45" cy="41" r="3" fill="#1a1a18"/><circle cx="49" cy="41" r="3" fill="#1a1a18"/><circle cx="46" cy="40" r="1.2" fill="#fff"/><circle cx="50" cy="40" r="1.2" fill="#fff"/><path d="M44 47 Q47 52 50 47" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M25 30 Q34 18 47 30" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/><path d="M35 21 Q35 14 35 10" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round"/></svg>'},
+fraise:{n:"une fraise",m:"Ses petits doigts se forment ! 🍓",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="19" ry="21" fill="#E74C3C"/><ellipse cx="36" cy="44" rx="15" ry="17" fill="#EC7063"/><circle cx="28" cy="40" r="3" fill="#1a1a18"/><circle cx="44" cy="40" r="3" fill="#1a1a18"/><circle cx="29" cy="39" r="1.2" fill="#fff"/><circle cx="45" cy="39" r="1.2" fill="#fff"/><path d="M28 47 Q36 55 44 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><circle cx="36" cy="34" r="2" fill="#C0392B"/><path d="M26 23 Q30 14 36 10 Q42 14 46 23" fill="#27AE60"/></svg>'},
+figue:{n:"une figue",m:"Ses os se durcissent ! 💜",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="17" ry="21" fill="#7D3C98"/><ellipse cx="36" cy="44" rx="13" ry="17" fill="#9B59B6"/><circle cx="29" cy="39" r="3" fill="#1a1a18"/><circle cx="43" cy="39" r="3" fill="#1a1a18"/><circle cx="30" cy="38" r="1.2" fill="#fff"/><circle cx="44" cy="38" r="1.2" fill="#fff"/><path d="M30 47 Q36 54 42 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M36 23 Q35 16 36 11" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="10" rx="4" ry="3" fill="#27AE60"/></svg>'},
+citron_vert:{n:"un citron vert",m:"FIN DU T1 ! Bébé est bien accroché 💚🎉",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="22" ry="20" fill="#229954"/><ellipse cx="36" cy="40" rx="18" ry="16" fill="#2ECC71"/><circle cx="27" cy="36" r="3.5" fill="#1a1a18"/><circle cx="45" cy="36" r="3.5" fill="#1a1a18"/><circle cx="28" cy="35" r="1.4" fill="#fff"/><circle cx="46" cy="35" r="1.4" fill="#fff"/><path d="M27 44 Q36 52 45 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><ellipse cx="50" cy="25" rx="7" ry="4" fill="#1E8449" transform="rotate(40 50 25)"/></svg>'},
+peche:{n:"une pêche",m:"Tout doux comme ses premiers cheveux ! 🍑",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="22" fill="#E8950A"/><circle cx="36" cy="40" r="19" fill="#F5B942"/><path d="M36 18 Q39 14 36 10 Q33 14 36 18" fill="#CA7309"/><circle cx="28" cy="36" r="3.5" fill="#1a1a18"/><circle cx="44" cy="36" r="3.5" fill="#1a1a18"/><circle cx="29" cy="35" r="1.4" fill="#fff"/><circle cx="45" cy="35" r="1.4" fill="#fff"/><path d="M28 44 Q36 52 44 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/></svg>'},
+citron:{n:"un citron",m:"Acide comme les envies de maman ? 🍋",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="24" ry="18" fill="#E8C22A"/><ellipse cx="36" cy="40" rx="20" ry="14" fill="#F7DC6F"/><ellipse cx="10" cy="38" rx="6" ry="5" fill="#E8C22A"/><ellipse cx="62" cy="38" rx="6" ry="5" fill="#E8C22A"/><circle cx="27" cy="37" r="3.5" fill="#1a1a18"/><circle cx="45" cy="37" r="3.5" fill="#1a1a18"/><circle cx="28" cy="36" r="1.4" fill="#fff"/><circle cx="46" cy="36" r="1.4" fill="#fff"/><path d="M27 44 Q36 52 45 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/></svg>'},
+avocat:{n:"un avocat",m:"Il entend vos voix ! Chantez-lui ! 🥑🎵",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="18" ry="25" fill="#229954"/><ellipse cx="36" cy="43" rx="14" ry="21" fill="#2ECC71"/><ellipse cx="36" cy="47" rx="10" ry="14" fill="#E59866" opacity="0.95"/><ellipse cx="36" cy="47" rx="7" ry="9" fill="#CA6F1E"/><circle cx="29" cy="38" r="3.5" fill="#1a1a18"/><circle cx="43" cy="38" r="3.5" fill="#1a1a18"/><circle cx="30" cy="37" r="1.4" fill="#fff"/><circle cx="44" cy="37" r="1.4" fill="#fff"/><path d="M29 46 Q36 54 43 46" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+patate_douce:{n:"une patate douce",m:"Les premiers coups de pied ! 🦵",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="40" rx="26" ry="18" fill="#C0392B" transform="rotate(-8 36 40)"/><ellipse cx="36" cy="40" rx="22" ry="14" fill="#E85D04" transform="rotate(-8 36 40)"/><circle cx="27" cy="37" r="3.5" fill="#1a1a18"/><circle cx="43" cy="39" r="3.5" fill="#1a1a18"/><circle cx="28" cy="36" r="1.4" fill="#fff"/><circle cx="44" cy="38" r="1.4" fill="#fff"/><path d="M27 45 Q35 51 44 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+banane:{n:"une banane",m:"MI-GROSSESSE ! Il fait des galipettes 🍌🤸",s:'<svg width="72" height="72" viewBox="0 0 72 72"><path d="M13 54 Q18 20 52 14 Q61 13 63 20 Q57 22 50 22 Q28 25 22 55 Z" fill="#E8C22A"/><path d="M15 52 Q20 22 51 16 Q59 15 60 20 Q54 21 48 22 Q27 26 22 53 Z" fill="#F7DC6F"/><circle cx="31" cy="33" r="3.5" fill="#1a1a18"/><circle cx="43" cy="28" r="3.5" fill="#1a1a18"/><circle cx="32" cy="32" r="1.4" fill="#fff"/><circle cx="44" cy="27" r="1.4" fill="#fff"/><path d="M30 40 Q37 46 45 35" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+epi_mais:{n:"un épi de maïs",m:"Il voit et entend de la musique ! 🌽🎶",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="14" ry="24" fill="#E8C22A"/><ellipse cx="36" cy="43" rx="11" ry="21" fill="#F9E79F"/><circle cx="30" cy="33" r="2.2" fill="#E8C22A"/><circle cx="36" cy="31" r="2.2" fill="#E8C22A"/><circle cx="42" cy="33" r="2.2" fill="#E8C22A"/><circle cx="30" cy="39" r="2.2" fill="#E8C22A"/><circle cx="36" cy="37" r="2.2" fill="#E8C22A"/><circle cx="42" cy="39" r="2.2" fill="#E8C22A"/><circle cx="29" cy="35" r="3.5" fill="#1a1a18"/><circle cx="43" cy="35" r="3.5" fill="#1a1a18"/><circle cx="30" cy="34" r="1.4" fill="#fff"/><circle cx="44" cy="34" r="1.4" fill="#fff"/><path d="M29 50 Q36 57 43 50" fill="none" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/><path d="M24 31 Q17 22 21 16" fill="none" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/><path d="M48 29 Q55 20 51 14" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+laitue:{n:"une laitue romaine",m:"Les yeux s\'ouvrent ! 👁️",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="47" rx="15" ry="20" fill="#229954"/><ellipse cx="36" cy="47" rx="11" ry="16" fill="#58D68D"/><path d="M21 38 Q28 24 36 20 Q44 24 51 38" fill="#2ECC71"/><path d="M16 44 Q24 28 36 22 Q48 28 56 44" fill="#229954" opacity="0.65"/><circle cx="28" cy="40" r="3.5" fill="#1a1a18"/><circle cx="44" cy="40" r="3.5" fill="#1a1a18"/><circle cx="29" cy="39" r="1.4" fill="#fff"/><circle cx="45" cy="39" r="1.4" fill="#fff"/><path d="M28 48 Q36 56 44 48" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+aubergine:{n:"une aubergine",m:"Bienvenue au T3 ! La ligne droite ! 🍆🏁",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="46" rx="16" ry="23" fill="#6C3483"/><ellipse cx="36" cy="46" rx="12" ry="19" fill="#8E44AD"/><path d="M27 23 Q31 17 36 15 Q41 17 45 23" fill="#229954"/><ellipse cx="36" cy="16" rx="6" ry="4" fill="#2ECC71"/><path d="M36 15 Q35 9 36 5" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linecap="round"/><circle cx="29" cy="40" r="3.5" fill="#1a1a18"/><circle cx="43" cy="40" r="3.5" fill="#1a1a18"/><circle cx="30" cy="39" r="1.4" fill="#fff"/><circle cx="44" cy="39" r="1.4" fill="#fff"/><path d="M29 50 Q36 58 43 50" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+chou:{n:"un chou frisé",m:"Il rêve peut-être de vous ! 💭😴",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="22" fill="#229954"/><circle cx="36" cy="40" r="18" fill="#2ECC71"/><ellipse cx="36" cy="40" rx="13" ry="9" fill="#58D68D"/><path d="M14 31 Q20 20 31 23 Q25 31 28 37" fill="#1E8449" opacity="0.75"/><path d="M58 31 Q52 20 41 23 Q47 31 44 37" fill="#196F3D" opacity="0.75"/><circle cx="28" cy="37" r="3.5" fill="#1a1a18"/><circle cx="44" cy="37" r="3.5" fill="#1a1a18"/><circle cx="29" cy="36" r="1.4" fill="#fff"/><circle cx="45" cy="36" r="1.4" fill="#fff"/><path d="M28 45 Q36 53 44 45" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+ananas:{n:"un ananas",m:"Il se retourne tête en bas ! 🍍",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="47" rx="17" ry="22" fill="#E59866"/><ellipse cx="36" cy="47" rx="14" ry="19" fill="#F4C430"/><line x1="21" y1="38" x2="51" y2="56" stroke="#C68B22" stroke-width="1.8"/><line x1="51" y1="38" x2="21" y2="56" stroke="#C68B22" stroke-width="1.8"/><line x1="36" y1="28" x2="36" y2="66" stroke="#C68B22" stroke-width="1.8"/><path d="M26 21 Q30 13 36 9 Q42 13 46 21" fill="#229954"/><path d="M36 9 Q36 3 36 1" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="40" r="3.5" fill="#1a1a18"/><circle cx="44" cy="40" r="3.5" fill="#1a1a18"/><circle cx="29" cy="39" r="1.4" fill="#fff"/><circle cx="45" cy="39" r="1.4" fill="#fff"/><path d="M28 50 Q36 58 44 50" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+cantaloup:{n:"un cantaloup",m:"Ses poumons préparent leur premier cri ! 🍈",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="40" r="24" fill="#E67E22"/><circle cx="36" cy="40" r="21" fill="#F39C12"/><path d="M36 16 L36 64" fill="none" stroke="#C0511A" stroke-width="1.8"/><path d="M13 34 L59 46" fill="none" stroke="#C0511A" stroke-width="1.8"/><path d="M15 50 L57 30" fill="none" stroke="#C0511A" stroke-width="1.8"/><circle cx="27" cy="36" r="3.5" fill="#1a1a18"/><circle cx="45" cy="36" r="3.5" fill="#1a1a18"/><circle cx="28" cy="35" r="1.4" fill="#fff"/><circle cx="46" cy="35" r="1.4" fill="#fff"/><path d="M28 44 Q36 52 44 44" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/></svg>'},
+papaye:{n:"une papaye",m:"À terme précoce ! Presque prêt 🌟",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="43" rx="18" ry="26" fill="#E67E22"/><ellipse cx="36" cy="43" rx="14" ry="22" fill="#F39C12"/><circle cx="28" cy="36" r="3.5" fill="#1a1a18"/><circle cx="44" cy="36" r="3.5" fill="#1a1a18"/><circle cx="29" cy="35" r="1.4" fill="#fff"/><circle cx="45" cy="35" r="1.4" fill="#fff"/><path d="M28 45 Q36 53 44 45" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/><path d="M28 17 Q31 11 36 9 Q41 11 44 17" fill="#229954"/></svg>'},
+citrouille:{n:"une citrouille",m:"Il prend position… ça approche ! 🎃🍼",s:'<svg width="72" height="72" viewBox="0 0 72 72"><ellipse cx="36" cy="44" rx="24" ry="21" fill="#CA6F1E"/><ellipse cx="24" cy="44" rx="11" ry="19" fill="#E67E22"/><ellipse cx="36" cy="44" rx="11" ry="19" fill="#F39C12"/><ellipse cx="48" cy="44" rx="11" ry="19" fill="#E67E22"/><line x1="36" y1="25" x2="36" y2="63" stroke="#CA6F1E" stroke-width="2.2"/><circle cx="27" cy="38" r="4" fill="#1a1a18"/><circle cx="45" cy="38" r="4" fill="#1a1a18"/><circle cx="28" cy="37" r="1.6" fill="#fff"/><circle cx="46" cy="37" r="1.6" fill="#fff"/><path d="M27 48 Q36 57 45 48" fill="none" stroke="#1a1a18" stroke-width="3" stroke-linecap="round"/><path d="M33 23 Q34 17 36 13" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+pasteque:{n:"une pastèque",m:"TERME ! 🍉🎉 Bébé est prêt — vous aussi !",s:'<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="42" r="25" fill="#229954"/><circle cx="36" cy="42" r="23" fill="#2ECC71"/><circle cx="36" cy="42" r="20" fill="#E74C3C"/><circle cx="36" cy="42" r="17" fill="#EC7063"/><circle cx="28" cy="38" r="2.2" fill="#1a1a18"/><circle cx="37" cy="34" r="2.2" fill="#1a1a18"/><circle cx="44" cy="38" r="2.2" fill="#1a1a18"/><circle cx="27" cy="38" r="4" fill="#1a1a18"/><circle cx="45" cy="38" r="4" fill="#1a1a18"/><circle cx="28" cy="37" r="1.6" fill="#fff"/><circle cx="46" cy="37" r="1.6" fill="#fff"/><path d="M26 47 Q36 58 46 47" fill="none" stroke="#1a1a18" stroke-width="3.5" stroke-linecap="round"/><path d="M34 17 Q35 11 36 7" fill="none" stroke="#196F3D" stroke-width="2.5" stroke-linecap="round"/></svg>'}
+};
+function getFruit(w){if(w<=4)return'pavot';if(w<=5)return'sesame';if(w<=6)return'lentille';if(w<=7)return'myrtille';if(w<=8)return'framboise';if(w<=9)return'cerise';if(w<=10)return'fraise';if(w<=11)return'figue';if(w<=13)return'citron_vert';if(w<=14)return'peche';if(w<=16)return'citron';if(w<=18)return'avocat';if(w<=19)return'patate_douce';if(w<=22)return'banane';if(w<=26)return'epi_mais';if(w<=27)return'laitue';if(w<=29)return'aubergine';if(w<=31)return'chou';if(w<=33)return'ananas';if(w<=35)return'cantaloup';if(w<=37)return'papaye';if(w<=39)return'citrouille';return'pasteque';}
 
+/* ══ DONNÉES BÉBÉ OMS ══ */
+const WD=[{w:4,g:.0005,cm:.10,desc:"L'œuf s'implante. Le tube neural se forme."},{w:5,g:.001,cm:.13,desc:"Le cœur commence à battre ! Les bourgeons des membres apparaissent."},{w:6,g:.002,cm:.30,desc:"Les traits du visage se dessinent. Le cerveau se développe."},{w:7,g:.003,cm:.80,desc:"Bras et jambes s'allongent. Le foie produit des cellules sanguines."},{w:8,g:.004,cm:1.6,desc:"Tous les organes essentiels sont formés. Les doigts se séparent."},{w:9,g:.007,cm:2.3,desc:"Le bébé bouge déjà, même si vous ne le sentez pas."},{w:10,g:.014,cm:3.1,desc:"Les organes génitaux se forment. Les ongles poussent."},{w:11,g:.025,cm:4.1,desc:"Il ouvre et ferme les poings. Les os se durcissent."},{w:12,g:.058,cm:5.4,desc:"Fin du T1 ! Le risque de fausse couche diminue fortement."},{w:13,g:.081,cm:7.4,desc:"Les empreintes digitales se forment. Il suce son pouce."},{w:14,g:.110,cm:8.7,desc:"Le sexe peut être visible à l'écho. Le lanugo recouvre le corps."},{w:16,g:.200,cm:11.6,desc:"Les yeux bougent. Il entend vos voix pour la première fois."},{w:18,g:.310,cm:14.2,desc:"Les premiers coups de pied peuvent être ressentis !"},{w:20,g:.460,cm:25.0,desc:"Mi-grossesse ! Échographie morphologique. Il avale du liquide amniotique."},{w:22,g:.630,cm:27.8,desc:"Sourcils et cils apparaissent. Le sens du toucher est développé."},{w:24,g:.820,cm:30.0,desc:"Les poumons se développent. Il réagit aux sons extérieurs."},{w:26,g:1.02,cm:33.0,desc:"Les yeux s'ouvrent ! Le cerveau est très actif."},{w:28,g:1.23,cm:35.0,desc:"Début du T3. Il prend de la graisse sous-cutanée."},{w:30,g:1.46,cm:37.5,desc:"Le cerveau se plisse. Le bébé fait des rêves (sommeil REM)."},{w:32,g:1.70,cm:39.5,desc:"Les ongles atteignent les doigts. Il se retourne tête en bas."},{w:34,g:2.00,cm:42.0,desc:"Les poumons arrivent à maturité. Il prend ~200 g/semaine."},{w:36,g:2.40,cm:45.0,desc:"'À terme précoce'. Il gagne du poids chaque jour."},{w:38,g:2.90,cm:48.0,desc:"Il est prêt à naître et prend position dans le bassin."},{w:39,g:3.10,cm:49.5,desc:"Quasi à terme. Tous les organes sont matures."},{w:40,g:3.30,cm:50.5,desc:"Terme ! 3 300 g, ~50 cm. Bébé prêt pour le monde."}];
 function interp(w,arr,key){if(w<=arr[0].w)return arr[0][key];if(w>=arr[arr.length-1].w)return arr[arr.length-1][key];for(let i=0;i<arr.length-1;i++){if(w>=arr[i].w&&w<arr[i+1].w){const t=(w-arr[i].w)/(arr[i+1].w-arr[i].w);return arr[i][key]+t*(arr[i+1][key]-arr[i][key]);}}return arr[arr.length-1][key];}
 function getStage(w){let s=WD[0];for(let d of WD){if(w>=d.w)s=d;else break;}return s;}
 function trimBg(w){return w<=13?'#E1F5EE':w<=27?'#FAEEDA':'#FAECE7';}
@@ -304,104 +364,262 @@ function trimName(w){return w<=13?'1er trimestre':w<=27?'2e trimestre':'3e trime
 function fmtW(g){if(g<.001)return'<1g';if(g<1)return Math.round(g*1000)+'g';return g.toFixed(2)+'kg';}
 function fmtS(cm){if(cm<1)return(cm*10).toFixed(1)+'mm';return cm.toFixed(1)+'cm';}
 function fmtDate(d){return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDateKey(d){return d.toISOString().split('T')[0];}
 
-const allWeeks=Array.from({length:37},(_,i)=>i+4);
-const allWeights=allWeeks.map(w=>parseFloat(interp(w,WD,'g').toFixed(4)));
+/* ══ CHARTS BÉBÉ & CALORIES ══ */
+const allW=Array.from({length:37},(_,i)=>i+4);
+const allWt=allW.map(w=>parseFloat(interp(w,WD,'g').toFixed(4)));
 Chart.register({id:'trimBands',beforeDraw(chart){const{ctx:c,chartArea:{top,bottom},scales:{x}}=chart;if(!x)return;[{from:4,to:13,color:'rgba(159,225,203,0.2)'},{from:14,to:27,color:'rgba(250,199,117,0.2)'},{from:28,to:40,color:'rgba(240,153,123,0.2)'}].forEach(b=>{const x1=x.getPixelForValue(b.from),x2=x.getPixelForValue(b.to);c.fillStyle=b.color;c.fillRect(x1,top,x2-x1,bottom-top);});}});
-const babyChart=new Chart(document.getElementById('wChart').getContext('2d'),{type:'line',data:{labels:allWeeks,datasets:[{data:allWeights,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2.5,pointRadius:0,fill:true,tension:0.45},{data:[],borderColor:'#D85A30',backgroundColor:'#D85A30',pointRadius:10,showLine:false},{data:[],borderColor:'#378ADD',backgroundColor:'#378ADD',pointRadius:6,showLine:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:10,callbacks:{title:c=>'SA '+c[0].label,label:c=>fmtW(c.parsed.y)}}},scales:{x:{ticks:{autoSkip:false,maxRotation:0,callback:(v,i)=>allWeeks[i]%4===0?allWeeks[i]:'',color:'#888780',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{min:0,max:3.8,ticks:{color:'#888780',font:{size:11},callback:v=>v<1?Math.round(v*1000)+'g':v.toFixed(1)+'kg'},grid:{color:'rgba(0,0,0,0.05)'}}}}}); 
+const babyChart=new Chart(document.getElementById('wChart').getContext('2d'),{type:'line',data:{labels:allW,datasets:[{data:allWt,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2.5,pointRadius:0,fill:true,tension:0.45},{data:[],borderColor:'#D85A30',backgroundColor:'#D85A30',pointRadius:10,showLine:false},{data:[],borderColor:'#378ADD',backgroundColor:'#378ADD',pointRadius:6,showLine:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:10,callbacks:{title:c=>'SA '+c[0].label,label:c=>fmtW(c.parsed.y)}}},scales:{x:{ticks:{autoSkip:false,maxRotation:0,callback:(v,i)=>allW[i]%4===0?allW[i]:'',color:'#888780',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{min:0,max:3.8,ticks:{color:'#888780',font:{size:11},callback:v=>v<1?Math.round(v*1000)+'g':v.toFixed(1)+'kg'},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 
-let calChartInst=null;
-function buildCalChart(realW,baseKcal,getExtra){const wks=Array.from({length:37},(_,i)=>i+4);if(calChartInst)calChartInst.destroy();calChartInst=new Chart(document.getElementById('calChart').getContext('2d'),{type:'line',data:{labels:wks,datasets:[{data:wks.map(w=>Math.round(baseKcal+getExtra(w))),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'},{data:wks.map(w=>Math.round(getExtra(w))),borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.08)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y2'},{data:[{x:realW,y:Math.round(baseKcal+getExtra(realW))}],borderColor:'#D85A30',backgroundColor:'#D85A30',pointRadius:8,showLine:false,yAxisID:'y'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:8,callbacks:{title:c=>'SA '+c[0].label,label:c=>Math.round(c.parsed.y)+' kcal'}}},scales:{x:{ticks:{autoSkip:false,maxRotation:0,callback:(v,i)=>wks[i]%8===0?wks[i]:'',color:'#888780',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{title:{display:true,text:'kcal total',font:{size:10},color:'#1D9E75'},position:'left',ticks:{color:'#888780',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y2:{title:{display:true,text:'+kcal',font:{size:10},color:'#BA7517'},position:'right',min:0,max:600,ticks:{color:'#888780',font:{size:10}},grid:{display:false}}}}}); }
+let calCI=null;
+function buildCalChart(rW,base,getEx){const wks=Array.from({length:37},(_,i)=>i+4);if(calCI)calCI.destroy();calCI=new Chart(document.getElementById('calChart').getContext('2d'),{type:'line',data:{labels:wks,datasets:[{data:wks.map(w=>Math.round(base+getEx(w))),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'},{data:wks.map(w=>Math.round(getEx(w))),borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.08)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y2'},{data:[{x:rW,y:Math.round(base+getEx(rW))}],borderColor:'#D85A30',backgroundColor:'#D85A30',pointRadius:8,showLine:false,yAxisID:'y'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:8,callbacks:{title:c=>'SA '+c[0].label,label:c=>Math.round(c.parsed.y)+' kcal'}}},scales:{x:{ticks:{autoSkip:false,maxRotation:0,callback:(v,i)=>wks[i]%8===0?wks[i]:'',color:'#888780',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{title:{display:true,text:'kcal total',font:{size:10},color:'#1D9E75'},position:'left',ttick:{color:'#888780',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y2:{title:{display:true,text:'+kcal',font:{size:10},color:'#BA7517'},position:'right',min:0,max:600,ticks:{color:'#888780',font:{size:10}},grid:{display:false}}}}}); }
 
-function calcNutrition(week,pA,pC,taille,act){const imc=pA/((taille/100)**2);const mb=10*pC+6.25*taille-5*30-161;const tdeeBase=Math.round(mb*act);function extraKcal(w){let base;if(w<=13){base=imc<18.5?100:imc<25?50:imc<30?0:-50;}else if(w<=27){base=imc<18.5?340:imc<25?300:imc<30?260:220;}else{base=imc<18.5?500:imc<25?450:imc<30?400:350;}if(w>=14&&w<=16){const t=(w-13)/3;base=Math.round((50+(300-50)*t)*(imc<25?1:0.87));}if(w>=28&&w<=30){const t=(w-27)/3;const pv=imc<18.5?340:imc<25?300:imc<30?260:220;const nx=imc<18.5?500:imc<25?450:imc<30?400:350;base=Math.round(pv+(nx-pv)*t);}return base;}const extra=extraKcal(week),total=tdeeBase+extra;const prot=Math.round(total*.20/4),gluc=Math.round(total*.50/4),lip=Math.round(total*.30/9);let gainMin,gainMax,imcLbl;if(imc<18.5){gainMin=12.5;gainMax=18;imcLbl='Sous-poids';}else if(imc<25){gainMin=11.5;gainMax=16;imcLbl='Normal';}else if(imc<30){gainMin=7;gainMax=11.5;imcLbl='Surpoids';}else{gainMin=5;gainMax=9;imcLbl='Obésité';}const gainActuel=pC-pA,prog=Math.min(week/40,1);const gMin=parseFloat((gainMin*prog).toFixed(1)),gMax=parseFloat((gainMax*prog).toFixed(1));const tips={1:[{icon:'🥦',t:'Acide folique (B9) : légumes verts, lentilles. Ou supplément 400 µg/j.'},{icon:'🥛',t:'Calcium : 3 produits laitiers/j ou équivalents végétaux.'},{icon:'🚫',t:'Évitez : alcool, fromages à pâte molle, charcuteries, viandes crues.'},{icon:'💧',t:'Hydratation : au moins 1,5 L d\'eau/j.'}],2:[{icon:'🥩',t:'Protéines : viande, poisson cuit 2×/sem, œufs, légumineuses.'},{icon:'🫐',t:'Fer + vitamine C pour améliorer l\'absorption.'},{icon:'🐟',t:'Oméga-3 DHA : saumon, sardines, maquereau cuits 2×/sem.'},{icon:'🌞',t:'Vitamine D : soleil + poissons gras. Supplément souvent conseillé.'}],3:[{icon:'🍽️',t:'5–6 petits repas/j : le bébé comprime l\'estomac.'},{icon:'🧀',t:'Calcium intensifié : les os du bébé se minéralisent fortement.'},{icon:'🥜',t:'Magnésium (amandes, noix) contre les crampes nocturnes.'},{icon:'🌾',t:'Fibres (céréales complètes) contre la constipation.'}]};const trimIdx=week<=13?1:week<=27?2:3;return{imc,imcLbl,tdeeBase,extra,total,prot,gluc,lip,gainMin,gainMax,gainActuel,gMin,gMax,tips:tips[trimIdx],extraKcal};}
+/* ══ COURBE POIDS MAMAN ══ */
+let momChartI=null;
+function buildMomChart(conceptionDate,pAvant){
+  const entries=getMomWeights();
+  const sorted=Object.entries(entries).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(momChartI)momChartI.destroy();
+  if(sorted.length===0){momChartI=null;return;}
+  const labels=sorted.map(([d])=>new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}));
+  const vals=sorted.map(([,v])=>v);
+  // Calcul semaine SA pour chaque point
+  const saVals=sorted.map(([d])=>{const diff=Math.round((new Date(d)-new Date(conceptionDate))/86400000);return Math.max(1,Math.round((diff+14)/7));});
+  // Fourchette recommandée (gain idéal min/max proraté)
+  const gainMin=pAvant?11.5:0,gainMax=pAvant?16:0;
+  const minLine=sorted.map(([d])=>{const diff=Math.round((new Date(d)-new Date(conceptionDate))/86400000);const sa=Math.max(1,Math.round((diff+14)/7));return pAvant?parseFloat((pAvant+gainMin*(sa/40)).toFixed(1)):null;});
+  const maxLine=sorted.map(([d])=>{const diff=Math.round((new Date(d)-new Date(conceptionDate))/86400000);const sa=Math.max(1,Math.round((diff+14)/7));return pAvant?parseFloat((pAvant+gainMax*(sa/40)).toFixed(1)):null;});
+  momChartI=new Chart(document.getElementById('wMomChart').getContext('2d'),{type:'line',
+    data:{labels,datasets:[
+      {label:'Mon poids',data:vals,borderColor:'#993556',backgroundColor:'rgba(153,53,86,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#993556',fill:true,tension:0.3},
+      {label:'Min recommandé',data:minLine,borderColor:'#1D9E75',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,tension:0.3},
+      {label:'Max recommandé',data:maxLine,borderColor:'#FAC775',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,tension:0.3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a1a18',bodyColor:'#5f5e5a',borderColor:'rgba(0,0,0,0.1)',borderWidth:1,padding:10,callbacks:{title:c=>labels[c[0].dataIndex],label:c=>c.dataset.label+' : '+c.parsed.y+' kg'}}},
+      scales:{x:{ticks:{color:'#888780',font:{size:10},maxRotation:45},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{color:'#888780',font:{size:11},callback:v=>v+' kg'},grid:{color:'rgba(0,0,0,0.05)'}}}}}
+  );
+}
 
-function drawBaby(week,color){const svg=document.getElementById('baby-svg');svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const scale=Math.max(0.08,Math.min(1.0,(week-3)/37));const cx=100,headR=Math.round(18+scale*32),bodyW=Math.round(14+scale*26),bodyH=Math.round(20+scale*40);const headY=Math.round(30+(1-scale)*60),bodyY=headY+headR-2;const fc=color||'#9FE1CB',sc='#888780';function el(tag,attrs){const e=document.createElementNS(ns,tag);for(let[k,v]of Object.entries(attrs))e.setAttribute(k,v);svg.appendChild(e);}if(week<8){el('ellipse',{cx,cy:110,rx:Math.round(8+scale*20),ry:Math.round(12+scale*28),fill:fc,stroke:sc,'stroke-width':1});}else{el('ellipse',{cx,cy:headY,rx:headR,ry:headR,fill:fc,stroke:sc,'stroke-width':1});el('ellipse',{cx,cy:bodyY+bodyH/2,rx:bodyW,ry:bodyH/2,fill:fc,stroke:sc,'stroke-width':1});if(week>=10){const aL=Math.round(bodyW*.8+scale*10);el('line',{x1:cx-bodyW,y1:bodyY+8,x2:cx-bodyW-aL,y2:bodyY+16+scale*10,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});el('line',{x1:cx+bodyW,y1:bodyY+8,x2:cx+bodyW+aL,y2:bodyY+16+scale*10,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});}if(week>=12){const lL=Math.round(16+scale*28);el('line',{x1:cx-bodyW*.5,y1:bodyY+bodyH-4,x2:cx-bodyW*.5-8,y2:bodyY+bodyH+lL,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});el('line',{x1:cx+bodyW*.5,y1:bodyY+bodyH-4,x2:cx+bodyW*.5+8,y2:bodyY+bodyH+lL,stroke:sc,'stroke-width':Math.max(1,Math.round(scale*4)),'stroke-linecap':'round'});}if(week>=14){el('circle',{cx:cx-Math.round(headR*.35),cy:headY-Math.round(headR*.1),r:Math.round(headR*.12),fill:sc});el('circle',{cx:cx+Math.round(headR*.35),cy:headY-Math.round(headR*.1),r:Math.round(headR*.12),fill:sc});const sx=Math.round(headR*.25);el('path',{d:`M ${cx-sx} ${headY+Math.round(headR*.3)} Q ${cx} ${headY+Math.round(headR*.45)} ${cx+sx} ${headY+Math.round(headR*.3)}`,fill:'none',stroke:sc,'stroke-width':1.5,'stroke-linecap':'round'});}}}
+/* ══ STOCKAGE POIDS MAMAN ══ */
+function getMomWeights(){try{return JSON.parse(localStorage.getItem('mom-weights')||'{}');}catch{return {};}}
+function saveMomWeights(data){localStorage.setItem('mom-weights',JSON.stringify(data));}
 
-let realWeek=null;
+/* ══ CALENDRIER ══ */
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let selectedDate=null;
+const DAYS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function renderCalendar(){
+  const weights=getMomWeights();
+  const today=new Date();
+  const firstDay=new Date(calYear,calMonth,1);
+  const lastDay=new Date(calYear,calMonth+1,0);
+  let startDow=(firstDay.getDay()+6)%7; // lundi=0
+  document.getElementById('cal-month').textContent=MONTHS[calMonth]+' '+calYear;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  DAYS.forEach(d=>{const el=document.createElement('div');el.className='cal-day-name';el.textContent=d;grid.appendChild(el);});
+  for(let i=0;i<startDow;i++){const el=document.createElement('div');el.className='cal-day empty';el.innerHTML='<span class="dnum"></span>';grid.appendChild(el);}
+  for(let day=1;day<=lastDay.getDate();day++){
+    const date=new Date(calYear,calMonth,day);
+    const key=fmtDateKey(date);
+    const el=document.createElement('div');
+    let cls='cal-day';
+    if(date.toDateString()===today.toDateString())cls+=' today';
+    if(weights[key])cls+=' has-weight';
+    if(selectedDate===key)cls+=' selected';
+    el.className=cls;
+    const dnum=document.createElement('span');dnum.className='dnum';dnum.textContent=day;el.appendChild(dnum);
+    if(weights[key]){const wp=document.createElement('span');wp.className='wpill';wp.textContent=weights[key]+'kg';el.appendChild(wp);}
+    el.onclick=()=>selectDay(key,date);
+    grid.appendChild(el);
+  }
+  updateWeightSummary();
+}
+
+function selectDay(key,date){
+  selectedDate=key;
+  const weights=getMomWeights();
+  document.getElementById('sel-date-lbl').textContent=date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('w-input').value=weights[key]||'';
+  document.getElementById('wstat').textContent='';
+  renderCalendar();
+}
+
+function saveWeight(){
+  if(!selectedDate){document.getElementById('wstat').textContent='Sélectionnez d\'abord un jour dans le calendrier.';return;}
+  const val=parseFloat(document.getElementById('w-input').value);
+  if(isNaN(val)||val<30||val>250){document.getElementById('wstat').textContent='Poids invalide (entre 30 et 250 kg).';return;}
+  const weights=getMomWeights();
+  weights[selectedDate]=Math.round(val*10)/10;
+  saveMomWeights(weights);
+  document.getElementById('wstat').textContent='✓ Poids enregistré pour le '+new Date(selectedDate).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+  renderCalendar();
+  if(globalConc&&globalPAvant)buildMomChart(globalConc,globalPAvant);
+}
+
+function deleteWeight(){
+  if(!selectedDate)return;
+  const weights=getMomWeights();
+  if(weights[selectedDate]){delete weights[selectedDate];saveMomWeights(weights);document.getElementById('wstat').textContent='Pesée supprimée.';}
+  document.getElementById('w-input').value='';
+  renderCalendar();
+  if(globalConc&&globalPAvant)buildMomChart(globalConc,globalPAvant);
+}
+
+function updateWeightSummary(){
+  const weights=getMomWeights();
+  const entries=Object.entries(weights).sort((a,b)=>a[0].localeCompare(b[0]));
+  document.getElementById('wp-count').textContent=entries.length;
+  if(entries.length===0){document.getElementById('wp-last').textContent='—';document.getElementById('wp-gain').textContent='—';return;}
+  const last=entries[entries.length-1][1];
+  document.getElementById('wp-last').textContent=last;
+  if(globalPAvant&&globalPAvant>0){const gain=last-globalPAvant;document.getElementById('wp-gain').textContent=(gain>=0?'+':'')+gain.toFixed(1)+' kg';}
+  else document.getElementById('wp-gain').textContent='—';
+}
+
+document.getElementById('cal-prev').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();};
+document.getElementById('cal-next').onclick=()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
+
+/* ══ NUTRITION ══ */
+function calcNutrition(week,pA,pC,taille,act){
+  const imc=pA/((taille/100)**2);
+  const mb=10*pC+6.25*taille-5*30-161;
+  const tdeeBase=Math.round(mb*act);
+  function extraKcal(w){let b;if(w<=13){b=imc<18.5?100:imc<25?50:imc<30?0:-50;}else if(w<=27){b=imc<18.5?340:imc<25?300:imc<30?260:220;}else{b=imc<18.5?500:imc<25?450:imc<30?400:350;}if(w>=14&&w<=16){const t=(w-13)/3;b=Math.round((50+(300-50)*t)*(imc<25?1:0.87));}if(w>=28&&w<=30){const t=(w-27)/3;const pv=imc<18.5?340:imc<25?300:imc<30?260:220;const nx=imc<18.5?500:imc<25?450:imc<30?400:350;b=Math.round(pv+(nx-pv)*t);}return b;}
+  const extra=extraKcal(week),total=tdeeBase+extra;
+  const prot=Math.round(total*.20/4),gluc=Math.round(total*.50/4),lip=Math.round(total*.30/9);
+  let gainMin,gainMax,imcLbl;
+  if(imc<18.5){gainMin=12.5;gainMax=18;imcLbl='Sous-poids';}else if(imc<25){gainMin=11.5;gainMax=16;imcLbl='Normal';}else if(imc<30){gainMin=7;gainMax=11.5;imcLbl='Surpoids';}else{gainMin=5;gainMax=9;imcLbl='Obésité';}
+  const gainActuel=pC-pA,prog=Math.min(week/40,1);
+  const gMin=parseFloat((gainMin*prog).toFixed(1)),gMax=parseFloat((gainMax*prog).toFixed(1));
+  const tips={1:[{icon:'🥦',t:'Acide folique (B9) : légumes verts, lentilles. Supplément 400 µg/j.'},{icon:'🥛',t:'Calcium : 3 produits laitiers/j ou équivalents végétaux.'},{icon:'🚫',t:'Évitez : alcool, fromages à pâte molle, charcuteries, viandes crues.'},{icon:'💧',t:'Au moins 1,5 L d\'eau/j.'}],2:[{icon:'🥩',t:'Protéines : viande, poisson cuit 2×/sem, œufs, légumineuses.'},{icon:'🫐',t:'Fer + vitamine C pour l\'absorption.'},{icon:'🐟',t:'Oméga-3 DHA : saumon, sardines, maquereau cuits 2×/sem.'},{icon:'🌞',t:'Vitamine D : soleil + poissons gras. Supplément souvent conseillé.'}],3:[{icon:'🍽️',t:'5–6 petits repas/j : le bébé comprime l\'estomac.'},{icon:'🧀',t:'Calcium intensifié : les os du bébé se minéralisent fortement.'},{icon:'🥜',t:'Magnésium (amandes, noix) contre les crampes nocturnes.'},{icon:'🌾',t:'Fibres (céréales complètes) contre la constipation.'}]};
+  const ti=week<=13?1:week<=27?2:3;
+  return{imc,imcLbl,tdeeBase,extra,total,prot,gluc,lip,gainMin,gainMax,gainActuel,gMin,gMax,tips:tips[ti],extraKcal};
+}
+
+/* ══ DRAW BABY ══ */
+function drawBaby(week){
+  const svg=document.getElementById('baby-svg');svg.innerHTML='';
+  const ns='http://www.w3.org/2000/svg';
+  const sc=Math.max(0.08,Math.min(1.0,(week-3)/37));
+  const cx=100,hR=Math.round(18+sc*32),bW=Math.round(14+sc*26),bH=Math.round(20+sc*40);
+  const hY=Math.round(30+(1-sc)*60),bY=hY+hR-2;
+  const fc='#9FE1CB',sk='#888780';
+  function el(tag,at){const e=document.createElementNS(ns,tag);for(let[k,v]of Object.entries(at))e.setAttribute(k,v);svg.appendChild(e);}
+  if(week<8){el('ellipse',{cx,cy:110,rx:Math.round(8+sc*20),ry:Math.round(12+sc*28),fill:fc,stroke:sk,'stroke-width':1});}
+  else{el('ellipse',{cx,cy:hY,rx:hR,ry:hR,fill:fc,stroke:sk,'stroke-width':1});el('ellipse',{cx,cy:bY+bH/2,rx:bW,ry:bH/2,fill:fc,stroke:sk,'stroke-width':1});
+    if(week>=10){const aL=Math.round(bW*.8+sc*10);el('line',{x1:cx-bW,y1:bY+8,x2:cx-bW-aL,y2:bY+16+sc*10,stroke:sk,'stroke-width':Math.max(1,Math.round(sc*4)),'stroke-linecap':'round'});el('line',{x1:cx+bW,y1:bY+8,x2:cx+bW+aL,y2:bY+16+sc*10,stroke:sk,'stroke-width':Math.max(1,Math.round(sc*4)),'stroke-linecap':'round'});}
+    if(week>=12){const lL=Math.round(16+sc*28);el('line',{x1:cx-bW*.5,y1:bY+bH-4,x2:cx-bW*.5-8,y2:bY+bH+lL,stroke:sk,'stroke-width':Math.max(1,Math.round(sc*4)),'stroke-linecap':'round'});el('line',{x1:cx+bW*.5,y1:bY+bH-4,x2:cx+bW*.5+8,y2:bY+bH+lL,stroke:sk,'stroke-width':Math.max(1,Math.round(sc*4)),'stroke-linecap':'round'});}
+    if(week>=14){el('circle',{cx:cx-Math.round(hR*.35),cy:hY-Math.round(hR*.1),r:Math.round(hR*.12),fill:sk});el('circle',{cx:cx+Math.round(hR*.35),cy:hY-Math.round(hR*.1),r:Math.round(hR*.12),fill:sk});const sx=Math.round(hR*.25);el('path',{d:`M ${cx-sx} ${hY+Math.round(hR*.3)} Q ${cx} ${hY+Math.round(hR*.45)} ${cx+sx} ${hY+Math.round(hR*.3)}`,fill:'none',stroke:sk,'stroke-width':1.5,'stroke-linecap':'round'});}}
+}
+
+/* ══ ÉTAT GLOBAL ══ */
+let realWeek=null,globalConc=null,globalPAvant=0;
+
 function updateAll(){
   const c=document.getElementById('g-conc').value,t=document.getElementById('g-today').value;
-  const taille=parseFloat(document.getElementById('m-taille').value)||0;
-  const pA=parseFloat(document.getElementById('m-poids-avant').value)||0;
-  const pC=parseFloat(document.getElementById('m-poids-actuel').value)||pA;
-  const act=parseFloat(document.getElementById('m-activite').value)||1.375;
-  const err=document.getElementById('g-error');
+  const taille=parseFloat(document.getElementById('m-t').value)||0;
+  const pA=parseFloat(document.getElementById('m-pa').value)||0;
+  const pC=parseFloat(document.getElementById('m-pc').value)||pA;
+  const act=parseFloat(document.getElementById('m-act').value)||1.375;
+  const err=document.getElementById('g-err');
   if(!c||!t)return;
   const diff=Math.round((new Date(t)-new Date(c))/86400000);
   if(diff<0){err.style.display='block';return;}
   err.style.display='none';
   realWeek=Math.max(4,Math.min(40,Math.round((diff+14)/7)));
+  globalConc=c; globalPAvant=pA;
   const due=new Date(c);due.setDate(due.getDate()+40*7-14);
   const dueFmt=fmtDate(due),pct=Math.min(100,Math.round((realWeek/40)*100));
   const stage=getStage(realWeek),kg=interp(realWeek,WD,'g'),cm=interp(realWeek,WD,'cm');
-  document.getElementById('summary-card').style.display='block';
-  document.getElementById('s-week').textContent=realWeek;
+
+  // Résumé
+  document.getElementById('sum-card').style.display='block';
+  document.getElementById('s-w').textContent=realWeek;
   document.getElementById('s-due').textContent=dueFmt;
-  if(taille&&pA){const imc=pA/((taille/100)**2);document.getElementById('s-imc').textContent=imc.toFixed(1);document.getElementById('s-imc-lbl').textContent=imc<18.5?'Sous-poids':imc<25?'Normal':imc<30?'Surpoids':'Obésité';document.getElementById('s-gain').textContent=(pC-pA>=0?'+':'')+(pC-pA).toFixed(1);}
-  document.getElementById('bebe-content').style.display='block';
+  if(taille&&pA){const imc=pA/((taille/100)**2);document.getElementById('s-imc').textContent=imc.toFixed(1);document.getElementById('s-imc-l').textContent=imc<18.5?'Sous-poids':imc<25?'Normal':imc<30?'Surpoids':'Obésité';document.getElementById('s-g').textContent=(pC-pA>=0?'+':'')+(pC-pA).toFixed(1)+' kg';}
+
+  // Bébé
+  document.getElementById('bebe-ok').style.display='block';
   document.getElementById('bebe-empty').style.display='none';
   document.getElementById('g-badge').innerHTML=`<span class="badge-pill" style="background:${trimBg(realWeek)};color:${trimTxt(realWeek)};">${trimName(realWeek)}</span>`;
-  document.getElementById('g-stage-label').textContent=(realWeek<10?'Embryon':'Fœtus')+' · SA '+realWeek;
-  document.getElementById('g-desc-title').textContent='Semaine '+realWeek+' — développement';
-  document.getElementById('g-desc-text').textContent=stage.desc;
-  document.getElementById('b-week').textContent=realWeek;
-  document.getElementById('b-weight').textContent=fmtW(kg);
-  document.getElementById('b-size').textContent=fmtS(cm);
+  document.getElementById('g-sl').textContent=(realWeek<10?'Embryon':'Fœtus')+' · SA '+realWeek;
+  document.getElementById('g-dt').textContent='Semaine '+realWeek+' — développement';
+  document.getElementById('g-dd').textContent=stage.desc;
+  document.getElementById('b-w').textContent=realWeek;
+  document.getElementById('b-wt').textContent=fmtW(kg);
+  document.getElementById('b-sz').textContent=fmtS(cm);
   document.getElementById('b-due').textContent=dueFmt;
-  document.getElementById('g-progress').style.width=pct+'%';
-  document.getElementById('g-progress-label').textContent=pct+'% · '+Math.max(0,40-realWeek)+' semaines restantes';
-  drawBaby(realWeek,'#9FE1CB');
-  const fk=getFruitKey(realWeek),fd=FRUITS[fk];
-  document.getElementById('fruit-svg-wrap').innerHTML=fd.svg;
-  document.getElementById('fruit-name').textContent=fd.name;
-  document.getElementById('fruit-msg').textContent=fd.msg;
-  document.getElementById('fruit-size-badge').textContent=fmtS(cm)+' environ';
-  document.getElementById('courbe-content').style.display='block';
+  document.getElementById('g-prog').style.width=pct+'%';
+  document.getElementById('g-progl').textContent=pct+'% · '+Math.max(0,40-realWeek)+' semaines restantes';
+  drawBaby(realWeek);
+  const fk=getFruit(realWeek),fd=FR[fk];
+  document.getElementById('fsv').innerHTML=fd.s;
+  document.getElementById('fname').textContent=fd.n;
+  document.getElementById('fmsg').textContent=fd.m;
+  document.getElementById('fsize').textContent=fmtS(cm)+' environ';
+
+  // Courbe bébé
+  document.getElementById('courbe-ok').style.display='block';
   document.getElementById('courbe-empty').style.display='none';
-  document.getElementById('g-slider').value=realWeek;
-  document.getElementById('g-slider-lbl').textContent='SA '+realWeek;
-  document.getElementById('g-slider-info').textContent='Votre position : SA '+realWeek;
+  document.getElementById('g-sl2').value=realWeek;
+  document.getElementById('g-slv').textContent='SA '+realWeek;
+  document.getElementById('g-sli').textContent='Votre position : SA '+realWeek;
   babyChart.data.datasets[1].data=[{x:realWeek,y:kg}];
   babyChart.data.datasets[2].data=[];
   babyChart.update('none');
-  if(taille&&pA){document.getElementById('nutri-content').style.display='block';document.getElementById('nutri-empty').style.display='none';renderNutrition(realWeek,pA,pC||pA,taille,act);}else{document.getElementById('nutri-content').style.display='none';document.getElementById('nutri-empty').style.display='block';}
-  ['g-conc','m-taille','m-poids-avant','m-poids-actuel','m-activite'].forEach(id=>{const el=document.getElementById(id);if(el.value)localStorage.setItem(id,el.value);});
+
+  // Nutrition
+  if(taille&&pA){
+    document.getElementById('nutri-ok').style.display='block';
+    document.getElementById('nutri-empty').style.display='none';
+    const n=calcNutrition(realWeek,pA,pC||pA,taille,act);
+    document.getElementById('n-badge').innerHTML=`<span class="badge-pill" style="background:${trimBg(realWeek)};color:${trimTxt(realWeek)};">${trimName(realWeek)}</span>`;
+    document.getElementById('n-tot').textContent=n.total.toLocaleString('fr-FR');
+    document.getElementById('n-sub').textContent='dont +'+n.extra+' kcal pour votre bébé ce trimestre';
+    document.getElementById('n-base').textContent=n.tdeeBase.toLocaleString('fr-FR');
+    document.getElementById('n-extra').textContent='+'+n.extra;
+    document.getElementById('n-ed').textContent=realWeek<=13?'T1 : besoins limités':realWeek<=27?'T2 : croissance active':'T3 : croissance rapide';
+    document.getElementById('n-imc').textContent=n.imc.toFixed(1);
+    document.getElementById('n-imcl').textContent=n.imcLbl;
+    document.getElementById('imc-cur').style.left=Math.min(100,Math.max(0,(n.imc-16)/(40-16)*100))+'%';
+    document.getElementById('n-gr').textContent='Prise de poids recommandée (IOM) : '+n.gainMin+'–'+n.gainMax+' kg';
+    const gb=document.getElementById('n-gs'),gA=n.gainActuel.toFixed(1);
+    if(n.gainActuel<n.gMin){gb.className='gs low';gb.innerHTML=`<strong>Prise de poids : +${gA} kg</strong> — En dessous de l'objectif (${n.gMin}–${n.gMax} kg attendus à SA ${realWeek}).`;}
+    else if(n.gainActuel>n.gMax){gb.className='gs high';gb.innerHTML=`<strong>Prise de poids : +${gA} kg</strong> — Au-dessus de l'objectif (${n.gMin}–${n.gMax} kg attendus à SA ${realWeek}).`;}
+    else{gb.className='gs ok';gb.innerHTML=`<strong>Prise de poids : +${gA} kg ✓</strong> — Dans la fourchette pour SA ${realWeek} (${n.gMin}–${n.gMax} kg).`;}
+    document.getElementById('n-p').textContent=n.prot+'g';
+    document.getElementById('n-gl').textContent=n.gluc+'g';
+    document.getElementById('n-l').textContent=n.lip+'g';
+    buildCalChart(realWeek,n.tdeeBase,n.extraKcal);
+    document.getElementById('n-tips').innerHTML=n.tips.map(t=>`<li><span class="ti">${t.icon}</span><span>${t.t}</span></li>`).join('');
+  }else{document.getElementById('nutri-ok').style.display='none';document.getElementById('nutri-empty').style.display='block';}
+
+  // Mon poids
+  document.getElementById('poids-ok').style.display='block';
+  document.getElementById('poids-empty').style.display='none';
+  buildMomChart(c,pA);
+  updateWeightSummary();
+  // Note fourchette dans courbe maman
+  if(pA){const gainMin=11.5,gainMax=16;document.getElementById('mom-note').textContent='Zone verte = fourchette recommandée (IOM) proratisée semaine par semaine';}
+
+  ['g-conc','m-t','m-pa','m-pc','m-act'].forEach(id=>{const el=document.getElementById(id);if(el.value)localStorage.setItem(id,el.value);});
 }
 
-function renderNutrition(week,pA,pC,taille,act){
-  const n=calcNutrition(week,pA,pC,taille,act);
-  document.getElementById('n-badge').innerHTML=`<span class="badge-pill" style="background:${trimBg(week)};color:${trimTxt(week)};">${trimName(week)}</span>`;
-  document.getElementById('n-total').textContent=n.total.toLocaleString('fr-FR');
-  document.getElementById('n-total-sub').textContent='dont +'+n.extra+' kcal pour votre bébé ce trimestre';
-  document.getElementById('n-base').textContent=n.tdeeBase.toLocaleString('fr-FR');
-  document.getElementById('n-extra').textContent='+'+n.extra;
-  document.getElementById('n-extra-desc').textContent=week<=13?'T1 : besoins limités':week<=27?'T2 : croissance active':'T3 : croissance rapide';
-  document.getElementById('n-imc').textContent=n.imc.toFixed(1);
-  document.getElementById('n-imc-lbl').textContent=n.imcLbl;
-  const imcPct=Math.min(100,Math.max(0,(n.imc-16)/(40-16)*100));
-  document.getElementById('imc-cursor').style.left=imcPct+'%';
-  document.getElementById('n-gain-reco').textContent='Prise de poids recommandée (IOM) : '+n.gainMin+'–'+n.gainMax+' kg sur toute la grossesse';
-  const gainBox=document.getElementById('gain-status-box'),gA=n.gainActuel.toFixed(1);
-  if(n.gainActuel<n.gMin){gainBox.className='gain-status low';gainBox.innerHTML=`<strong>Prise de poids : +${gA} kg</strong> — En dessous de l'objectif proratisé (${n.gMin}–${n.gMax} kg attendus à SA ${week}). Consultez votre sage-femme.`;}
-  else if(n.gainActuel>n.gMax){gainBox.className='gain-status high';gainBox.innerHTML=`<strong>Prise de poids : +${gA} kg</strong> — Au-dessus de l'objectif proratisé (${n.gMin}–${n.gMax} kg attendus à SA ${week}). Un suivi nutritionnel est conseillé.`;}
-  else{gainBox.className='gain-status ok';gainBox.innerHTML=`<strong>Prise de poids : +${gA} kg ✓</strong> — Dans la fourchette recommandée pour SA ${week} (${n.gMin}–${n.gMax} kg). Continuez ainsi !`;}
-  document.getElementById('n-prot').textContent=n.prot+'g';document.getElementById('n-prot-g').textContent='20% · 4 kcal/g';
-  document.getElementById('n-gluc').textContent=n.gluc+'g';document.getElementById('n-gluc-g').textContent='50% · 4 kcal/g';
-  document.getElementById('n-lip').textContent=n.lip+'g';document.getElementById('n-lip-g').textContent='30% · 9 kcal/g';
-  buildCalChart(week,n.tdeeBase,n.extraKcal);
-  document.getElementById('n-tips').innerHTML=n.tips.map(t=>`<li><span class="tip-icon">${t.icon}</span><span>${t.t}</span></li>`).join('');
-}
-
-document.getElementById('g-slider').addEventListener('input',function(){
+document.getElementById('g-sl2').addEventListener('input',function(){
   const w=parseInt(this.value);
-  document.getElementById('g-slider-lbl').textContent='SA '+w;
-  document.getElementById('g-slider-info').textContent=w===realWeek?'Votre position : SA '+realWeek:'Exploration SA '+w+(realWeek?' · Votre stade : SA '+realWeek:'');
+  document.getElementById('g-slv').textContent='SA '+w;
+  document.getElementById('g-sli').textContent=w===realWeek?'Votre position : SA '+realWeek:'Exploration SA '+w+(realWeek?' · Votre stade : SA '+realWeek:'');
   babyChart.data.datasets[2].data=w!==realWeek?[{x:w,y:interp(w,WD,'g')}]:[];
   babyChart.data.datasets[1].data=realWeek?[{x:realWeek,y:interp(realWeek,WD,'g')}]:[];
   babyChart.update('none');
 });
 
-['g-conc','g-today','m-taille','m-poids-avant','m-poids-actuel','m-activite'].forEach(id=>{document.getElementById(id).addEventListener('change',updateAll);});
-['g-conc','m-taille','m-poids-avant','m-poids-actuel','m-activite'].forEach(id=>{const v=localStorage.getItem(id);if(v)document.getElementById(id).value=v;});
+['g-conc','g-today','m-t','m-pa','m-pc','m-act'].forEach(id=>document.getElementById(id).addEventListener('change',updateAll));
+['g-conc','m-t','m-pa','m-pc','m-act'].forEach(id=>{const v=localStorage.getItem(id);if(v)document.getElementById(id).value=v;});
 document.getElementById('g-today').value=new Date().toISOString().split('T')[0];
 updateAll();
 </script>
